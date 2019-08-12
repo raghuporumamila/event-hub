@@ -1,0 +1,3 @@
+com/eventhub/schema/Application.class
+com/eventhub/schema/controller/ValidateController.class
+com/eventhub/schema/validator/JSONSchemaValidator.class

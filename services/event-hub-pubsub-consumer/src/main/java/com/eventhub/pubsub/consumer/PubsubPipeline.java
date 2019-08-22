@@ -20,7 +20,10 @@ import com.google.datastore.v1.Value;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.protobuf.Descriptors.FieldDescriptor;
+
 import static com.google.datastore.v1.client.DatastoreHelper.makeKey;
+import static com.google.datastore.v1.client.DatastoreHelper.makeValue;
 
 public class PubsubPipeline {
 	private static final String PROJECT_ID = "event-hub-249001";
@@ -30,7 +33,7 @@ public class PubsubPipeline {
         String randomUUIDString = uuid.toString();
         return randomUUIDString;
 	}
-	
+
 	public static void main(String[] args) throws Exception {
 		PubsubOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().as(PubsubOptions.class);
 		Pipeline pipeline = Pipeline.create(options);
@@ -52,10 +55,18 @@ public class PubsubPipeline {
 				
 				Map<String, Value> propertyMap = new HashMap<String, Value>();
 				Iterator<Entry<String, JsonElement>> it = jsonObject.entrySet().iterator();
+				
 				while (it.hasNext()) {
 					Entry<String, JsonElement> entry = it.next();
-					propertyMap.put(entry.getKey(), Value.newBuilder().setStringValue(entry.getValue().getAsString()).build());
+					if (!entry.getKey().equals("properties")) {
+						propertyMap.put(entry.getKey(), Value.newBuilder().setStringValue(entry.getValue().getAsString()).build());
+					} else {
+						
+						Value val = Value.newBuilder().setEntityValue(getEmbeddedEntity(entry)).build();
+						propertyMap.put(entry.getKey(), val);
+					}
 				}
+				
 				entityBuilder.putAllProperties(propertyMap);
 				Entity entity = entityBuilder.build();
 				c.output(entity);
@@ -65,5 +76,19 @@ public class PubsubPipeline {
 		pipeline.run();
 	}
 	
+	private static Entity getEmbeddedEntity(Entry<String, JsonElement> entry) {
+		JsonObject firstLevelJsonObj = entry.getValue().getAsJsonObject();
+		Iterator<Entry<String, JsonElement>> firstLevelIt = firstLevelJsonObj.entrySet().iterator();
+		Map<String, Value> firstLevelPropertyMap = new HashMap<String, Value>();
+		while (firstLevelIt.hasNext()) {
+			Entry<String, JsonElement> firstLevelEntry = firstLevelIt.next();
+			firstLevelPropertyMap.put(firstLevelEntry.getKey(), Value.newBuilder().setStringValue(firstLevelEntry.getValue().getAsString()).build());
+		}
+		
+		Entity.Builder entityBuilder = Entity.newBuilder();
+		entityBuilder.putAllProperties(firstLevelPropertyMap);
+		Entity entity = entityBuilder.build();
+		return entity;
+	}
 	
 }

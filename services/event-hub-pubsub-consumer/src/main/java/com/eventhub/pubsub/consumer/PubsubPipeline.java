@@ -14,6 +14,7 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 
+import org.apache.beam.sdk.io.gcp.pubsub.PubsubMessage;
 import com.google.datastore.v1.Entity;
 import com.google.datastore.v1.Key;
 import com.google.datastore.v1.Value;
@@ -39,21 +40,31 @@ public class PubsubPipeline {
 		Pipeline pipeline = Pipeline.create(options);
 		
 		//Get the JSON lines from pub sub topic
-		PCollection<String> lines = pipeline
-				.apply(PubsubIO.readStrings()
+		PCollection<PubsubMessage> messages = pipeline
+				.apply(PubsubIO.readMessagesWithAttributes()
 						.fromSubscription(options.getSubscriptionName()));
 		
-		PCollection<Entity> entities = lines.apply(ParDo.of(new DoFn<String, Entity>() {
+		/*PCollection<String> lines = pipeline
+				.apply(PubsubIO.readStrings()
+						.fromSubscription(options.getSubscriptionName()));*/
+		
+		PCollection<Entity> entities = messages.apply(ParDo.of(new DoFn<PubsubMessage, Entity>() {
 			@ProcessElement
 		    public void processElement(ProcessContext c) {
-				String json = c.element();
+				String json = new String(c.element().getPayload());
 				JsonElement jsonData = new JsonParser().parse(json);
+				System.out.println(json);
 				JsonObject jsonObject = jsonData.getAsJsonObject();
 				Key.Builder keyBuilder = makeKey("org_events", UUID.randomUUID().toString());
 				Entity.Builder entityBuilder = Entity.newBuilder();
 				entityBuilder.setKey(keyBuilder.build());
-				
+				//Map<String, String> attributesMap = c.element().getAttribute();
 				Map<String, Value> propertyMap = new HashMap<String, Value>();
+				System.out.println("Org ID == " + c.element().getAttribute("orgId"));
+				System.out.println("Workspace == " + c.element().getAttribute("workspace"));
+				propertyMap.put("orgId", Value.newBuilder().setStringValue(c.element().getAttribute("orgId")).build());
+				propertyMap.put("workspace", Value.newBuilder().setStringValue(c.element().getAttribute("workspace")).build());
+				
 				Iterator<Entry<String, JsonElement>> it = jsonObject.entrySet().iterator();
 				
 				while (it.hasNext()) {

@@ -1,5 +1,8 @@
 package com.eventhub.pubsub.consumer;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -26,6 +29,10 @@ import com.google.protobuf.Descriptors.FieldDescriptor;
 import static com.google.datastore.v1.client.DatastoreHelper.makeKey;
 import static com.google.datastore.v1.client.DatastoreHelper.makeValue;
 
+import static com.google.protobuf.util.Timestamps.fromMillis;
+import static java.lang.System.currentTimeMillis;
+import com.google.protobuf.Timestamp;
+
 public class PubsubPipeline {
 	private static final String PROJECT_ID = "event-hub-249001";
 	
@@ -50,7 +57,7 @@ public class PubsubPipeline {
 		
 		PCollection<Entity> entities = messages.apply(ParDo.of(new DoFn<PubsubMessage, Entity>() {
 			@ProcessElement
-		    public void processElement(ProcessContext c) {
+		    public void processElement(ProcessContext c) throws Exception {
 				String json = new String(c.element().getPayload());
 				JsonElement jsonData = new JsonParser().parse(json);
 				System.out.println(json);
@@ -71,6 +78,12 @@ public class PubsubPipeline {
 					Entry<String, JsonElement> entry = it.next();
 					if (!entry.getKey().equals("properties")) {
 						propertyMap.put(entry.getKey(), Value.newBuilder().setStringValue(entry.getValue().getAsString()).build());
+						if (entry.getKey().startsWith("timestamp")) {
+							DateFormat m_ISO8601Local = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+							Date date = m_ISO8601Local.parse(entry.getValue().getAsString());
+							com.google.protobuf.Timestamp timestamp = fromMillis(date.getTime());
+							propertyMap.put(entry.getKey(), Value.newBuilder().setTimestampValue(timestamp).build());
+						}
 					} else {
 						
 						Value val = Value.newBuilder().setEntityValue(getEmbeddedEntity(entry)).build();

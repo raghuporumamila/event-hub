@@ -1,5 +1,5 @@
 steps:
  - name: maven:3-jdk-8
    entrypoint: mvn
-   args: ['clean', 'compile', 'jib:build', '-Dmaven.test.skip=true']
+   args: ['clean', 'compile', 'jib:build', '-Dmaven.test.skip=true', '-Ddocker.image.prefix=gcr.io/$PROJECT_ID']
 

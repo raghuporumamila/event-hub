@@ -1,11 +1,5 @@
 steps:
 - name: gcr.io/cloud-builders/mvn
-  args: ['clean', 'compile', 'jib:build', '-Dmaven.test.skip=true', '-Ddocker.image.prefix=gcr.io/$PROJECT_ID']
-  volumes:
-  - name: user.home
-    path: /root
-
-- name: gcr.io/cloud-builders/mvn
   entrypoint: bash
   args:
   - -c

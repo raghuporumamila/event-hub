@@ -7,4 +7,4 @@ steps:
     export PATH=$$PATH:. &&
     curl -fsSL https://github.com/GoogleCloudPlatform/docker-credential-gcr/releases/download/v1.5.0/docker-credential-gcr_linux_amd64-1.5.0.tar.gz | tar zxv &&
     chmod +x docker-credential-gcr &&
-    mvn -B clean compile -Dversion=$BUILD_ID_$REVISION_ID jib:build -Dmaven.test.skip=true -Ddocker.image.prefix=gcr.io/$PROJECT_ID
+    mvn -B clean compile -Dversion=$BUILD_ID jib:build -Dmaven.test.skip=true -Ddocker.image.prefix=gcr.io/$PROJECT_ID

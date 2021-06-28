@@ -9,7 +9,7 @@ steps:
     chmod +x docker-credential-gcr &&
     mvn -B clean compile -Dversion=$BUILD_ID jib:build -Dmaven.test.skip=true -Ddocker.image.prefix=gcr.io/$PROJECT_ID
   
-- name: 'gcr.io/$PROJECT_ID/helm'
+- name: 'gcr.io/cloud-builders/helm'
   args: ['upgrade', '--install', '--set', 'image.tag=$BUILD_ID', 'event-hub-schema', './helm']
   env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'

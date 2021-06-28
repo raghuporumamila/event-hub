@@ -1,5 +1,21 @@
 steps:
- - name: maven:3-jdk-8
-   entrypoint: mvn
-   args: ['clean', 'compile', 'jib:build', '-Dmaven.test.skip=true', '-Ddocker.image.prefix=gcr.io/$PROJECT_ID']
+- name: gcr.io/cloud-builders/mvn
+  dir: /root
+  entrypoint: bash
+  args:
+  - -c
+  - # Links the Docker config to /root/.docker/config.json so that Jib picks it up.
+    # Note that this is only a temporary workaround.
+    # See https://github.com/GoogleContainerTools/jib/pull/1500.
+    |
+    mkdir .docker &&
+    ln -s /builder/home/.docker/config.json .docker/config.json
+  volumes:
+  - name: user.home
+    path: /root
 
+- name: gcr.io/cloud-builders/mvn
+  args: ['clean', 'compile', 'jib:build', '-Dmaven.test.skip=true', '-Ddocker.image.prefix=gcr.io/$PROJECT_ID']
+  volumes:
+  - name: user.home
+    path: /root

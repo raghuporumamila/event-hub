@@ -8,6 +8,7 @@ spec:
       app: "{{.Values.nameOverride}}"
       tier: validator
       track: stable
+      namespace: "{{.Release.Namespace}}"
   replicas: 2
   template:
     metadata:

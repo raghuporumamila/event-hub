@@ -6,6 +6,7 @@ spec:
   selector:
     app: event-hub-schema
     tier: validator
+    namespace: "{{.Release.Namespace}}"
   ports:
   - protocol: TCP
     port: 8080

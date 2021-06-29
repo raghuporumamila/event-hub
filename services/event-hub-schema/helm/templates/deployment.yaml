@@ -16,6 +16,7 @@ spec:
         app: "{{.Values.nameOverride}}"
         tier: validator
         track: stable
+        namespace: "{{.Release.Namespace}}"
     spec:
       containers:
         - name: "{{.Values.nameOverride}}"

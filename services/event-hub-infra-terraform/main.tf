@@ -16,9 +16,3 @@ resource "google_pubsub_subscription" "consumer_events_topic_sub" {
 
     enable_message_ordering    = false
 }
-
-terraform {  
-    backend "gcs" {
-        
-    }
-}

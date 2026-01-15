@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: event-hub-dao
+spec:
+  selector:
+    app: event-hub-dao
+    tier: backend
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: http

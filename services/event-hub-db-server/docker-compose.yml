@@ -1,0 +1,23 @@
+services:
+  alloydb:
+    build: .
+    container_name: alloydb-omni
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    # AlloyDB requires high shared memory for its columnar engine
+    shm_size: '2gb'
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nice:
+        soft: -20
+        hard: -20
+    volumes:
+      # Persistent Data: Maps local 'data' folder to container's internal DB path
+      - ./alloydb-data:/var/lib/postgresql/data
+      # Required for shared memory performance
+      - /dev/shm:/dev/shm

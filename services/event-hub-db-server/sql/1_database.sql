@@ -1,0 +1,2 @@
+CREATE DATABASE eventhub;
+CREATE SCHEMA IF NOT EXISTS security;

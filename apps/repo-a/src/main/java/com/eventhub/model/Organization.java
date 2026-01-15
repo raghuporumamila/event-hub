@@ -13,10 +13,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "organization")
+@Table(name = "organization", schema = "security")
 public class Organization {
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 	private String name;
 	private String address;
@@ -24,6 +24,7 @@ public class Organization {
 	private String city;
 	private String country;
 	private String state;
+	@Column(name = "postalcode")
 	private String postalCode;
 	@OneToMany(mappedBy = "organization", cascade = CascadeType.ALL)
 	private List<SourceType> sourceTypes;

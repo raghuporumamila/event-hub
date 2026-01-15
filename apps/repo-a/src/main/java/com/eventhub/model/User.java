@@ -11,17 +11,21 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(name = "user", schema = "security")
 public class User {
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	private String email;
+	private String password;
 	private String name;
-	private String role;
+	@ManyToOne
+	@JoinColumn(name = "role_id")
+	private Role role;
 	@ManyToOne
 	@JoinColumn(name = "default_workspace_id")
 	private Workspace defaultWorkspace;
 	@ManyToOne
-	@JoinColumn(name = "orgId")
+	@JoinColumn(name = "organization_id")
 	private Organization organization;
 }

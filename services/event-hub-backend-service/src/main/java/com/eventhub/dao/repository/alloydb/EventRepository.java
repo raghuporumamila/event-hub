@@ -29,7 +29,7 @@ public class EventRepository extends BaseRepository {
 		for (QueryDocumentSnapshot document : documents) {
 			EventDefinition definition = new EventDefinition();
 			
-			definition.setId(document.getId());
+			//definition.setId(document.getId());
 			definition.setOrgId(document.getString("orgId"));
 			definition.setSourceId(document.getString("sourceId"));
 			definition.setEventName(document.getString("eventName"));
@@ -51,7 +51,7 @@ public class EventRepository extends BaseRepository {
 		for (QueryDocumentSnapshot document : documents) {
 			
 			
-			definition.setId(document.getId());
+			//definition.setId(document.getId());
 			definition.setOrgId(document.getString("orgId"));
 			definition.setSourceId(document.getString("sourceId"));
 			definition.setEventName(document.getString("eventName"));
@@ -68,7 +68,7 @@ public class EventRepository extends BaseRepository {
 		
 		EventDefinition definition = new EventDefinition();
 		
-		definition.setId(document.getId());
+		//definition.setId(document.getId());
 		definition.setOrgId(document.getString("orgId"));
 		definition.setSourceId(document.getString("sourceId"));
 		definition.setEventName(document.getString("eventName"));
@@ -77,9 +77,10 @@ public class EventRepository extends BaseRepository {
 		
 		return definition;
 	}
-	
+
+
 	public void saveDefinition(EventDefinition definition) throws Exception {
-		DocumentReference docRef = db.collection("org_event_definitions").document(definition.getId());
+		DocumentReference docRef = null;//db.collection("org_event_definitions").document(definition.getId());
 		Map<String, Object> data = new HashMap<>();
         data.put("eventName", definition.getEventName());
         data.put("orgId", definition.getOrgId());
@@ -91,7 +92,7 @@ public class EventRepository extends BaseRepository {
 	}
 	
 	public void updateDefinition(EventDefinition definition) throws Exception {
-		DocumentReference docRef = db.collection("org_event_definitions").document(definition.getId());
+		DocumentReference docRef = null;//db.collection("org_event_definitions").document(definition.getId());
 		Map<String, Object> data = new HashMap<>();
         data.put("eventName", definition.getEventName());
         data.put("orgId", definition.getOrgId());
@@ -121,7 +122,7 @@ public class EventRepository extends BaseRepository {
 			event.setTimestamp(timestamp.toString());
 			event.setUserId(document.getString("userId"));
 			event.setSourceKey(document.getString("sourceKey"));
-			event.setProperties((Map<String, Object>)document.get("properties"));
+			//event.setProperties((Map<String, Object>)document.get("properties"));
 			
 			latestEvents.add(event);
 		}

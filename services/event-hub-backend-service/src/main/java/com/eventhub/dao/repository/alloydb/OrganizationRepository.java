@@ -11,7 +11,7 @@ import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.stereotype.Component;
 
 import com.eventhub.model.Organization;
-import com.eventhub.model.SourceType;
+import com.eventhub.model.Source;
 import com.eventhub.model.Workspace;
 import com.eventhub.dao.util.RepositoryUtil;
 import com.google.api.core.ApiFuture;

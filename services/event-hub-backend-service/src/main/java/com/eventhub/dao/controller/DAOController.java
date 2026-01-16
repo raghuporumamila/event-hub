@@ -8,16 +8,8 @@ import com.eventhub.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import com.eventhub.dao.util.RepositoryUtil;
-
 @RestController
 public class DAOController {
-
-	@Autowired
-	private SourceRepository sourceRepository;
-
-	@Autowired
-	private SourceTypeRepository sourceTypeRepository;
 	
 	@Autowired
 	private OrganizationRepository orgRepository;
@@ -44,30 +36,6 @@ public class DAOController {
 		return roleRepository.findAll();
 	}
 
-	@RequestMapping(value="/sources", method=RequestMethod.POST)
-	public void saveSource(@RequestBody Source source) throws Exception {
-		sourceRepository.save(source);
-	}
-	
-
-	
-	@RequestMapping(value="/sourceTypes", method=RequestMethod.GET)
-	public List<SourceType> getSourceTypes() throws Exception {
-		return sourceTypeRepository.findAll();
-	}
-
-	@RequestMapping(value="/organizations/{orgId}/{workspace}/sourceTypes", method=RequestMethod.GET)
-	public List<Source> getOrgAndWorkspaceSourceTypes(@PathVariable String orgId,
-								   @PathVariable String workspace) throws Exception {
-		return sourceTypeRepository.findByOrgId(orgId, workspace);
-	}
-
-	@RequestMapping(value="/organizations/{orgId}/{workspace}/sources", method=RequestMethod.GET)
-	public List<Source> getSources(@PathVariable String orgId,
-								   @PathVariable String workspace) throws Exception {
-		return sourceRepository.findByOrgId(orgId, workspace);
-	}
-	
 	//org releated methods
 	@RequestMapping(value="/organizations", method=RequestMethod.POST)
 	public Organization saveOrganization(@RequestBody Organization org) throws Exception {
@@ -124,11 +92,12 @@ public class DAOController {
 	public List<Target> getTargets() throws Exception {
 		return targetRepository.findAll();
 	}
-	
+
+	/*
 	@RequestMapping(value="/organization/targets", method=RequestMethod.GET)
 	public List<Target> getTargets(@RequestParam(name="orgId") String orgId) throws Exception {
 		return targetRepository.findByOrgId(orgId);
-	}
+	}*/
 	
 	//Consumers
 	@RequestMapping(value="/organization/consumers", method=RequestMethod.GET)
@@ -153,7 +122,7 @@ public class DAOController {
 	
 	@RequestMapping(value="/organization/eventDefinition", method=RequestMethod.PUT)
 	public void saveEventDefinition(@RequestBody EventDefinition eventDefinition)  throws Exception {
-		eventDefinition.setId(RepositoryUtil.getDocumentId());
+		//eventDefinition.setId(RepositoryUtil.getDocumentId());
 		eventRepository.saveDefinition(eventDefinition);
 	}
 	
@@ -177,26 +146,7 @@ public class DAOController {
 		return workspaceRepository.getWorkspaces(orgId);
 	}
 	
-	@RequestMapping(value="/organizations/{orgId}/sourceTypes", method=RequestMethod.POST)
-	public void saveSourceType(@PathVariable Long orgId, @RequestBody SourceType sourceType)  throws Exception {
-		Optional<Organization> organization = orgRepository.findById(orgId);
-        organization.ifPresent(sourceType::setOrganization);
-		sourceTypeRepository.save(sourceType);
-	}
-	
-	@RequestMapping(value="/organizations/{orgId}/sourceType", method=RequestMethod.DELETE)
-	public void deleteSourceType(@PathVariable Long orgId, @RequestBody SourceType sourceType)  throws Exception {
-		Optional<Organization> organization = orgRepository.findById(orgId);
-		organization.ifPresent(sourceType::setOrganization);
-		sourceTypeRepository.delete(sourceType);
-	}
-	
-	@RequestMapping(value="/organization/{orgId}/sourceTypes", method=RequestMethod.GET)
-	public List<SourceType> getSourceTypes(@PathVariable Long orgId,
-										   @RequestParam(name="workspace") String workspace)  throws Exception {
-		Optional<Organization> organization = orgRepository.findById(orgId);
-        return organization.map(Organization::getSourceTypes).orElse(null);
-    }
+
 	
 	@RequestMapping(value="/organization/events", method=RequestMethod.GET)
 	public List<Event> getEvents(@RequestParam(name="orgId") String orgId, @RequestParam(name="workspace") String workspace)  throws Exception {

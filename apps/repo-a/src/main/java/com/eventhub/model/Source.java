@@ -11,13 +11,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class SourceType {
+public class Source {
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	private String name;
-	private String type;
-	private String key;
+	private SourceTypeEnum type;
 	private String workspace;
 	@ManyToOne
 	@JoinColumn(name = "orgId")

@@ -27,5 +27,5 @@ public class Organization {
 	@Column(name = "postalcode")
 	private String postalCode;
 	@OneToMany(mappedBy = "organization", cascade = CascadeType.ALL)
-	private List<SourceType> sourceTypes;
+	private List<Source> sources;
 }

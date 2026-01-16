@@ -1,52 +1,25 @@
 package com.eventhub.model;
 
-import java.util.Map;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+
+@Entity
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Table(name = "event", schema = "event")
 public class Event {
-
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 	private String name;
 	private String sourceKey;
 	private String timestamp;
 	private String userId;
-	private Map<String, Object> properties;
-	
-	public String getName() {
-		return name;
-	}
-	
-	public void setName(String name) {
-		this.name = name;
-	}
-	
-	public String getSourceKey() {
-		return sourceKey;
-	}
-	
-	public void setSourceKey(String sourceKey) {
-		this.sourceKey = sourceKey;
-	}
-	
-	public String getTimestamp() {
-		return timestamp;
-	}
-	
-	public void setTimestamp(String timestamp) {
-		this.timestamp = timestamp;
-	}
-	
-	public String getUserId() {
-		return userId;
-	}
-	
-	public void setUserId(String userId) {
-		this.userId = userId;
-	}
-	
-	public Map<String, Object> getProperties() {
-		return properties;
-	}
-	
-	public void setProperties(Map<String, Object> properties) {
-		this.properties = properties;
-	}
+	//private Map<String, Object> properties;
 }

@@ -175,13 +175,13 @@
 		}
 		function showSources() {
 			$('#contentArea').html("<font color='green'>Loading.......</font>");
-			$.get('/sources', function(data) {
+			$.get('/site/v1/sources', function(data) {
 				  $('#contentArea').html(data);
 			});
 		}
 		function showTargets() {
 			$('#contentArea').html("<font color='green'>Loading.......</font>");
-			$.get('/targets', function(data) {
+			$.get('/site/v1/targets', function(data) {
 				  $('#contentArea').html(data);
 			});
 		}

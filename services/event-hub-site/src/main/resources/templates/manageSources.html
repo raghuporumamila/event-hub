@@ -70,7 +70,7 @@ $(document).ready(function(){
                         <td th:text="${orgSourceType.name}"></td>
 						<td th:text="${orgSourceType.type}"></td>
                         <td>
-                            <a th:href="'javascript:viewSourceTypeKey(\'' + ${orgSourceType.key} + '\');'" class="edit" ><i class="material-icons" data-toggle="tooltip" title="Settings">&#xE254;</i></a> 
+                            <a th:href="'javascript:viewSourceTypeKey(\'' + ${orgSourceType.id} + '\');'" class="edit" ><i class="material-icons" data-toggle="tooltip" title="Settings">&#xE254;</i></a>
                             <a href="#deleteModal" class="delete" data-toggle="modal"><i class="material-icons" data-toggle="tooltip" title="Delete">&#xE872;</i></a>
                         </td>
                     </tr>

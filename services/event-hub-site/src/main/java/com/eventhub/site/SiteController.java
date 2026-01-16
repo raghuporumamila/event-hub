@@ -182,17 +182,12 @@ public class SiteController {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 
-		List<SourceType> orgSourceTypes = restTemplate.exchange(apiEndPointUri.getDaoApiEndpoint() + "/organizations/" +
-						user.getOrganization().getId() + "/" + user.getDefaultWorkspace().getName() + "/sourceTypes"
+		List<Source> orgSourceTypes = restTemplate.exchange(apiEndPointUri.getDaoApiEndpoint() + "/organizations/" +
+						user.getOrganization().getId() + "/workspaces/" + user.getDefaultWorkspace().getId() + "/sources"
 						, HttpMethod.GET, null,
-				new ParameterizedTypeReference<List<SourceType>>() {
+				new ParameterizedTypeReference<List<Source>>() {
 				}).getBody();
 		model.addAttribute("orgSourceTypes", orgSourceTypes);
-
-		List<SourceType> sourceTypes = restTemplate.exchange(apiEndPointUri.getDaoApiEndpoint() + "/sourceTypes", HttpMethod.GET, null,
-				new ParameterizedTypeReference<List<SourceType>>() {
-				}).getBody();
-		model.addAttribute("sourceTypes", sourceTypes);
 
 		return "manageSources";
 	}
@@ -202,11 +197,11 @@ public class SiteController {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 
-		List<SourceType> orgSourceTypes = restTemplate.exchange(apiEndPointUri.getDaoApiEndpoint() + "/organization/sourceTypes?orgId=" + user.getOrganization().getId() +
+		List<Source> orgSourceTypes = restTemplate.exchange(apiEndPointUri.getDaoApiEndpoint() + "/organization/sourceTypes?orgId=" + user.getOrganization().getId() +
 				"&workspace=" + user.getDefaultWorkspace(), HttpMethod.GET, null,
-				new ParameterizedTypeReference<List<SourceType>>() {
+				new ParameterizedTypeReference<List<Source>>() {
 				}).getBody();
-		for (SourceType orgSourceType : orgSourceTypes) {
+		for (Source orgSourceType : orgSourceTypes) {
 			if (orgSourceType.getId().equals(id)) {
 				model.addAttribute("orgSourceType", orgSourceType);
 				break;
@@ -247,30 +242,16 @@ public class SiteController {
 	}
 */
 	@GetMapping(value = "/targets")
-	public String targets(Model model) {
+	public String targets(Model model, @ModelAttribute("user") User user) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 
-		List<Target> targets = restTemplate.exchange(apiEndPointUri.getDaoApiEndpoint() + "/targets", HttpMethod.GET, null,
+		List<Target> orgTargets = restTemplate.exchange(apiEndPointUri.getDaoApiEndpoint() + "/organizations/" +
+						user.getOrganization().getId() + "/workspaces/" + user.getDefaultWorkspace().getId() + "/targets"
+				, HttpMethod.GET, null,
 				new ParameterizedTypeReference<List<Target>>() {
 				}).getBody();
-		model.addAttribute("targets", targets);
-
-		List<Target> orgTargets = restTemplate.exchange(apiEndPointUri.getDaoApiEndpoint() + "/organization/targets?orgId=dzFyTqq4dT7YIai8mogz", HttpMethod.GET, null,
-				new ParameterizedTypeReference<List<Target>>() {
-				}).getBody();
-
-		for (Target orgTarget : orgTargets) {
-			for (Target target : targets) {
-				if (orgTarget.getParentId().equals(target.getId())) {
-					orgTarget.setName(target.getName());
-					break;
-				}
-			}
-		}
 		model.addAttribute("orgTargets", orgTargets);
-
-
 		return "manageTargets";
 	}
 
@@ -279,11 +260,11 @@ public class SiteController {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 
-		List<Source> sources = restTemplate.exchange(apiEndPointUri.getDaoApiEndpoint() + "/organization/sources?orgId=" + user.getOrganization().getId() +
+		/*List<Source> sources = restTemplate.exchange(apiEndPointUri.getDaoApiEndpoint() + "/organization/sources?orgId=" + user.getOrganization().getId() +
 				"&workspace=" + user.getDefaultWorkspace(), HttpMethod.GET, null,
 				new ParameterizedTypeReference<List<Source>>() {
-				}).getBody();
-		model.addAttribute("sources", sources);
+				}).getBody();*/
+		model.addAttribute("sources", null);
 
 		List<Target> targets = restTemplate.exchange(apiEndPointUri.getDaoApiEndpoint() + "/targets", HttpMethod.GET, null,
 				new ParameterizedTypeReference<List<Target>>() {

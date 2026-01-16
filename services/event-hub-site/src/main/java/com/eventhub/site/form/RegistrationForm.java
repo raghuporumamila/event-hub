@@ -41,7 +41,7 @@ public class RegistrationForm {
 		user.setDefaultWorkspace(defaultWorkspace);
 		user.setEmail(getEmail());
 		user.setName(getName());
-		user.setRole("Admin");
+		//user.setRole("Admin");
 		user.setOrganization(organization);
 		return user;
 	}

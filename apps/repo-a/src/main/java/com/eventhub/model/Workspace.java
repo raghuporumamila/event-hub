@@ -2,22 +2,19 @@ package com.eventhub.model;
 
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
-@Data
+@Getter // Only generate getters
+@Setter // Only generate setters
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @Table (name="workspace", schema = "security")
 public class Workspace {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "organization_id")
 	private Organization organization;
 	private String name;

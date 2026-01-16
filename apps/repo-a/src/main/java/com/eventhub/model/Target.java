@@ -1,24 +1,25 @@
 package com.eventhub.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
-@Data
+@Getter // Only generate getters
+@Setter // Only generate setters
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Table(name = "target", schema = "event")
 public class Target {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	private String name;
-	private String config;
-	private String parentId;
+	@Enumerated(EnumType.STRING)
+	private TargetTypeEnum type;
+	@ManyToOne
+	@JoinColumn(name = "workspace_id")
+	private Workspace workspace;
+	@ManyToOne
+	@JoinColumn(name = "org_id")
+	private Organization organization;
 }

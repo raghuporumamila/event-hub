@@ -21,5 +21,4 @@ public class Event {
 	private String sourceKey;
 	private String timestamp;
 	private String userId;
-	//private Map<String, Object> properties;
 }

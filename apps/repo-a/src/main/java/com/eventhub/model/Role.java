@@ -1,16 +1,13 @@
 package com.eventhub.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
-@Data
+@Getter // Only generate getters
+@Setter // Only generate setters
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @Table(name = "role", schema = "security")
 public class Role {
     @Id

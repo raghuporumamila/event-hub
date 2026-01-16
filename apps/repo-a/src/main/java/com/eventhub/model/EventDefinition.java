@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "event", schema = "event_definition")
+@Table(name = "event_definition", schema = "event")
 public class EventDefinition {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

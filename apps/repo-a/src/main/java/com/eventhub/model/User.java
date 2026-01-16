@@ -1,16 +1,13 @@
 package com.eventhub.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
-@Data
+@Getter // Only generate getters
+@Setter // Only generate setters
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @Table(name = "user", schema = "security")
 public class User {
 	@Id
@@ -19,13 +16,13 @@ public class User {
 	private String email;
 	private String password;
 	private String name;
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "role_id")
 	private Role role;
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "default_workspace_id")
 	private Workspace defaultWorkspace;
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "organization_id")
 	private Organization organization;
 }

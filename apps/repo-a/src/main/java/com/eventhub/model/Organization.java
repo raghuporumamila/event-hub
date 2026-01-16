@@ -1,18 +1,15 @@
 package com.eventhub.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
 @Entity
-@Data
+@Getter // Only generate getters
+@Setter // Only generate setters
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @Table(name = "organization", schema = "security")
 public class Organization {
 	@Id
@@ -26,6 +23,7 @@ public class Organization {
 	private String state;
 	@Column(name = "postalcode")
 	private String postalCode;
-	@OneToMany(mappedBy = "organization", cascade = CascadeType.ALL)
-	private List<Source> sources;
+	/*
+	@OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private List<Source> sources;*/
 }

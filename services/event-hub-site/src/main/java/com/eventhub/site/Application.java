@@ -2,11 +2,13 @@ package com.eventhub.site;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.session.data.redis.config.ConfigureRedisAction;
 
 @SpringBootApplication
+@EntityScan(basePackages = "com.eventhub.model")
 public class Application {
 	public static void main(String[] args) {
 		SpringApplication.run(Application.class, args);

@@ -41,13 +41,13 @@
   <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="/"><img src="/images/logo.png" style="width:30px;height:30px;"/>Event Hub</a>
   <ul class="navbar-nav navbar-left">
   	<li class="nav-item">
-  		<span class="navbar-text">Workspace - <span class="navbar-text" th:text="${user.defaultWorkspace}"></span></span>
+  		<span class="navbar-text">Workspace - <span class="navbar-text" th:text="${user.defaultWorkspace.name}"></span></span>
   	</li>
   </ul>
   <ul class="navbar-nav">
      <li class="nav-item dropdown">
          <a class="nav-link dropdown-toggle" id="navbarDropdownMenuLink" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-           <span class="navbar-text" th:text="${user.name}"></span>(<span class="navbar-text" th:text="${user.role}"></span>)
+           <span class="navbar-text" th:text="${user.name}"></span>(<span class="navbar-text" th:text="${user.role.getName()}"></span>)
          </a>
          <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
          	 <a class="dropdown-item" href="javascript:showWorkspaces()">Change Workspace</a>
@@ -208,7 +208,7 @@
 		<script th:inline="javascript">
 		/*<![CDATA[*/
 
-		    var flag = [[${user.defaultWorkspace}]]; 
+		    var flag = [[${user.defaultWorkspace.name}]];
 		    window.onload = function() {
 		        if(flag == null || flag == '') {
 		        	showWorkspaces(); 

@@ -65,24 +65,25 @@ public class SiteController {
 		return "events";
 	}
 
-	/*
+
 	@GetMapping(value = "/definitions")
 	public ModelAndView definitions(@ModelAttribute("user") User user) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 		ModelAndView modelAndView = new ModelAndView();
 		modelAndView.setViewName("manageDefinitions");
-		
-		List<EventDefinition> definitions = restTemplate.exchange(apiEndPointUri.getDaoApiEndpoint() + "/organization/eventDefinitions?orgId=" +
-				user.getOrganization().getId() + "&workspace=" + user.getDefaultWorkspace(), HttpMethod.GET, null,
+		String url = apiEndPointUri.getDaoApiEndpoint() + "/organizations/" + user.getOrganization().getId() +
+				"/workspaces/" + user.getDefaultWorkspace().getId() + "/eventDefinitions";
+		List<EventDefinition> definitions = restTemplate.exchange(url, HttpMethod.GET, null,
 				new ParameterizedTypeReference<List<EventDefinition>>() {
 				}).getBody();
 
-		List<Source> sources = restTemplate.exchange(apiEndPointUri.getDaoApiEndpoint() + "/organization/sourceTypes?orgId=" + user.getOrganization().getId() +
-				"&workspace=" + user.getDefaultWorkspace(), HttpMethod.GET, null,
+		url = apiEndPointUri.getDaoApiEndpoint() + "/organizations/" + user.getOrganization().getId() +
+				"/workspaces/" + user.getDefaultWorkspace().getId() + "/sources";
+		List<Source> sources = restTemplate.exchange(url, HttpMethod.GET, null,
 				new ParameterizedTypeReference<List<Source>>() {
 				}).getBody();
-
+		/*
 		for (EventDefinition definition : definitions) {
 			for (Source source : sources) {
 				if (definition.getSource().getId().longValue() == source.getId().longValue()) {
@@ -90,12 +91,12 @@ public class SiteController {
 					break;
 				}
 			}
-		}
+		}*/
 		modelAndView.addObject("definitions", definitions);
 		modelAndView.addObject("sources", sources);
 
 		return modelAndView;
-	}*/
+	}
 
 	/*
 	@PostMapping(value = "/createDefinition")
@@ -259,14 +260,16 @@ public class SiteController {
 	public String integrations(Model model, @ModelAttribute("user") User user) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-
-		/*List<Source> sources = restTemplate.exchange(apiEndPointUri.getDaoApiEndpoint() + "/organization/sources?orgId=" + user.getOrganization().getId() +
-				"&workspace=" + user.getDefaultWorkspace(), HttpMethod.GET, null,
+		String baseUrl = apiEndPointUri.getDaoApiEndpoint() +
+				"/organizations/" + user.getOrganization().getId() +
+				"/workspaces/" + user.getDefaultWorkspace().getId();
+		List<Source> sources = restTemplate.exchange( baseUrl + "/sources",
+				        HttpMethod.GET, null,
 				new ParameterizedTypeReference<List<Source>>() {
-				}).getBody();*/
-		model.addAttribute("sources", null);
+				}).getBody();
+		model.addAttribute("sources", sources);
 
-		List<Target> targets = restTemplate.exchange(apiEndPointUri.getDaoApiEndpoint() + "/targets", HttpMethod.GET, null,
+		List<Target> targets = restTemplate.exchange(baseUrl + "/targets", HttpMethod.GET, null,
 				new ParameterizedTypeReference<List<Target>>() {
 				}).getBody();
 		model.addAttribute("targets", targets);
@@ -346,7 +349,7 @@ public class SiteController {
 	//@PostMapping(value = "/login")
 
 
-	/*
+
 	@GetMapping(value = "/eventTester")
 	public ModelAndView eventTester(@ModelAttribute("user") User user) {
 		HttpHeaders headers = new HttpHeaders();
@@ -354,29 +357,25 @@ public class SiteController {
 		ModelAndView modelAndView = new ModelAndView();
 		modelAndView.setViewName("eventTester");
 
-		List<EventDefinition> definitions = restTemplate.exchange(apiEndPointUri.getDaoApiEndpoint() + "/organization/eventDefinitions?orgId=" +
-				user.getOrganization().getId() + "&workspace=" + user.getDefaultWorkspace(), HttpMethod.GET, null,
+		String url = apiEndPointUri.getDaoApiEndpoint() + "/organizations/" + user.getOrganization().getId() +
+				"/workspaces/" + user.getDefaultWorkspace().getId() + "/eventDefinitions";
+		List<EventDefinition> definitions = restTemplate.exchange(url, HttpMethod.GET, null,
 				new ParameterizedTypeReference<List<EventDefinition>>() {
 				}).getBody();
 
-		List<Source> sources = restTemplate.exchange(apiEndPointUri.getDaoApiEndpoint() + "/organization/sources?orgId=" + user.getOrganization().getId() +
-				"&workspace=" + user.getDefaultWorkspace(), HttpMethod.GET, null,
+		String baseUrl = apiEndPointUri.getDaoApiEndpoint() +
+				"/organizations/" + user.getOrganization().getId() +
+				"/workspaces/" + user.getDefaultWorkspace().getId();
+		List<Source> sources = restTemplate.exchange( baseUrl + "/sources",
+				HttpMethod.GET, null,
 				new ParameterizedTypeReference<List<Source>>() {
 				}).getBody();
 
-		for (EventDefinition definition : definitions) {
-			for (Source source : sources) {
-				if (definition.getSource().getId().longValue() == source.getId().longValue()) {
-					definition.setSource(source);
-					break;
-				}
-			}
-		}
 		modelAndView.addObject("definitions", definitions);
 		modelAndView.addObject("sources", sources);
 
 		return modelAndView;
-	}*/
+	}
 
 	@PostMapping(value = "/validateEventData")
 	@ResponseStatus(HttpStatus.OK)
@@ -393,7 +392,7 @@ public class SiteController {
 		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
 		MultiValueMap<String, String> map= new LinkedMultiValueMap<String, String>();
-		map.add("jsonSchema",  definition.getSchema());
+		map.add("jsonSchema",  definition.getPayloadSchema());
 		map.add("jsonData",  jsonData);
 
 		HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(map, headers1);
@@ -417,43 +416,34 @@ public class SiteController {
 			throw new RuntimeException(response.getBody());
 		}
 	}
-	/*
+
 	@GetMapping(value = "/eventHistory")
 	public String eventHistory(Model model, @ModelAttribute("user") User user) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 
-		List<SourceType> orgSourceTypes = restTemplate.exchange(apiEndPointUri.getDaoApiEndpoint() + "/organization/sourceTypes?orgId=" + user.getOrganization().getId() +
-				"&workspace=" + user.getDefaultWorkspace(), HttpMethod.GET, null,
-				new ParameterizedTypeReference<List<SourceType>>() {
+		String url = apiEndPointUri.getDaoApiEndpoint() + "/organizations/" + user.getOrganization().getId() +
+				"/workspaces/" + user.getDefaultWorkspace().getId() + "/sources";
+		List<Source> orgSourceTypes = restTemplate.exchange(url, HttpMethod.GET, null,
+				new ParameterizedTypeReference<List<Source>>() {
 				}).getBody();
 		model.addAttribute("orgSourceTypes", orgSourceTypes);
 
-		List<Event> events = restTemplate.exchange(apiEndPointUri.getDaoApiEndpoint() + "/organization/events?orgId=" + user.getOrganization().getId() + "&workspace=" + user.getDefaultWorkspace(), HttpMethod.GET, null,
+		url = apiEndPointUri.getDaoApiEndpoint() + "/organizations/" + user.getOrganization().getId() +
+				"/workspaces/" + user.getDefaultWorkspace().getId() + "/events";
+		List<Event> events = restTemplate.exchange(url, HttpMethod.GET, null,
 				new ParameterizedTypeReference<List<Event>>() {
 				}).getBody();
-		setSourceType(orgSourceTypes, events);
+
 		model.addAttribute("events", events);
-		
+
+		/*
 		List<EventCountsByDay> eventCounts = restTemplate.exchange(apiEndPointUri.getDaoApiEndpoint() + "/organization/eventCountsForPast7Days?orgId=" + user.getOrganization().getId() + "&workspace=" + user.getDefaultWorkspace(), HttpMethod.GET, null,
 				new ParameterizedTypeReference<List<EventCountsByDay>>() {
 				}).getBody();
 
-		model.addAttribute("eventCounts", eventCounts);
+		model.addAttribute("eventCounts", eventCounts);*/
 		
 		return "eventHistory";
 	}
-
-
-	private void setSourceType(List<SourceType> orgSourceTypes , List<Event> events) {
-		for (Event event : events) {
-			for (SourceType orgSourceType : orgSourceTypes) {
-				if (orgSourceType.getKey().equals(event.getSourceKey())) {
-					//System.out.println("inside if");
-					event.setSourceName(orgSourceType.getName());
-					break;
-				}
-			}
-		}
-	}*/
 }

@@ -17,7 +17,7 @@
 	function showDefinitions() {
 		
 		$('#cardContent').html("<font color='green'>Loading.......</font>");
-		$.get('/definitions', function(data) {
+		$.get('/site/v1/definitions', function(data) {
 			  $('#cardContent').html(data);
 			  $('#definitionsId').removeClass();
 			  $('#eventsId').removeClass();
@@ -31,7 +31,7 @@
 	function showEventHistory() {
 		
 		$('#cardContent').html("<font color='green'>Loading.......</font>");
-		$.get('/eventHistory', function(data) {
+		$.get('/site/v1/eventHistory', function(data) {
 			  $('#cardContent').html(data);
 			  $('#definitionsId').removeClass();
 			  $('#eventsId').removeClass();
@@ -45,7 +45,7 @@
 	function showEventTester() {
 		
 		$('#cardContent').html("<font color='green'>Loading.......</font>");
-		$.get('/eventTester', function(data) {
+		$.get('/site/v1/eventTester', function(data) {
 			  $('#cardContent').html(data);
 			  $('#definitionsId').removeClass();
 			  $('#eventsId').removeClass();

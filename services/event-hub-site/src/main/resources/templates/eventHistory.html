@@ -26,16 +26,18 @@
 							<tr>
 								<th>Event</th>
 								<th>Timestamp</th>
-								<th>UserId</th>
+								<th>Organization</th>
 								<th>Source</th>
+								<th>Workspace</th>
 							</tr>
 						</thead>
 						<tbody>
 							<tr th:each="event : ${events}">
 								<td th:text="${event.name}"></td>
 								<td th:text="${event.timestamp}"></td>
-								<td th:text="${event.userId}"></td>
-								<td th:text="${event.sourceName}"></td>
+								<td th:text="${event.organization.name}"></td>
+								<td th:text="${event.source.name}"></td>
+								<td th:text="${event.workspace.name}"></td>
 							</tr>
 							
 						</tbody>

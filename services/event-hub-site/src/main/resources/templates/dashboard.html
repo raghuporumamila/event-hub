@@ -169,7 +169,7 @@
         <script type="text/javascript">
 		function showEvents() {
 			$('#contentArea').html("<font color='green'>Loading.......</font>");
-			$.get('/events', function(data) {
+			$.get('/site/v1/events', function(data) {
 				  $('#contentArea').html(data);
 			});
 		}
@@ -187,7 +187,7 @@
 		}
 		function showIntegrations() {
 			$('#contentArea').html("<font color='green'>Loading.......</font>");
-			$.get('/integrations', function(data) {
+			$.get('/site/v1/integrations', function(data) {
 				  $('#contentArea').html(data);
 			});
 		}

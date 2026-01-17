@@ -1,24 +1,29 @@
 package com.eventhub.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 
 @Entity
-@Data
+@Getter // Only generate getters
+@Setter // Only generate setters
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @Table(name = "event", schema = "event")
 public class Event {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	private String name;
-	private String sourceKey;
+	@ManyToOne
+	@JoinColumn(name = "organization_id")
+	private Organization organization;
+	@ManyToOne
+	@JoinColumn(name = "source_id")
+	private Source source;
+	@ManyToOne
+	@JoinColumn(name = "workspace_id")
+	private Workspace workspace;
 	private String timestamp;
-	private String userId;
+	private String payload;
 }

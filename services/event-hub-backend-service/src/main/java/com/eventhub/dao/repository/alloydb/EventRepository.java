@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.eventhub.dao.repository.BaseRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.stereotype.Component;
 
 import com.eventhub.model.Event;
@@ -18,10 +20,13 @@ import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.cloud.firestore.QuerySnapshot;
 import com.google.cloud.firestore.WriteResult;
+import org.springframework.stereotype.Repository;
 
-@Component(value="eventRepository")
-public class EventRepository extends BaseRepository {
-	public List<EventDefinition> findDefinitionsByOrgId(String orgId, String workspace) throws Exception {
+@Repository
+public interface EventRepository extends ListCrudRepository<Event, Long> {
+	@Query("SELECT d FROM Event d WHERE d.organization.id = :orgId and d.workspace.id=:workspaceId")
+	List<Event> getEvents(Long orgId, Long workspaceId);
+	/*public List<EventDefinition> findDefinitionsByOrgId(String orgId, String workspace) throws Exception {
 		List<EventDefinition> definitions = new ArrayList<EventDefinition>();
 		ApiFuture<QuerySnapshot> query = db.collection("org_event_definitions").whereEqualTo("orgId", orgId).whereEqualTo("workspace", workspace).get();
 		QuerySnapshot querySnapshot = query.get();
@@ -179,5 +184,5 @@ public class EventRepository extends BaseRepository {
 		eventCountsByDay.setDayName("Sunday");
 		eventCountsForPast7Days.add(eventCountsByDay);
 		return eventCountsForPast7Days;
-	}
+	}*/
 }

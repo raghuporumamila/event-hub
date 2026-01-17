@@ -20,8 +20,6 @@ public class ConsumerRepository extends BaseRepository {
 		List<QueryDocumentSnapshot> documents = querySnapshot.getDocuments();
 		for (QueryDocumentSnapshot document : documents) {
 			Consumer consumer = new Consumer();
-			
-			consumer.setId(document.getId());
 			consumer.setFirstName(document.getString("firstName"));
 			consumer.setLastName(document.getString("lastName"));
 			consumer.setOrgId(document.getString("orgId"));

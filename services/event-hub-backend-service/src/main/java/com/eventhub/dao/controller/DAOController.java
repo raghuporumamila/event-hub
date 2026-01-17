@@ -23,8 +23,7 @@ public class DAOController {
 	@Autowired
 	private ConsumerRepository consumerRepository;
 
-	@Autowired
-	private EventRepository eventRepository;
+
 
 	@Autowired
 	private WorkspaceRepository workspaceRepository;
@@ -105,36 +104,7 @@ public class DAOController {
 		return consumerRepository.findByOrgId(orgId, workspace);
 	}
 	
-	@RequestMapping(value="/organization/eventDefinitions", method=RequestMethod.GET)
-	public List<EventDefinition> getEventDefinitions(@RequestParam(name="orgId") String orgId, @RequestParam(name="workspace") String workspace) throws Exception {
-		return eventRepository.findDefinitionsByOrgId(orgId, workspace);
-	}
-	
-	@RequestMapping(value="/eventDefinition", method=RequestMethod.GET)
-	public EventDefinition getEventDefinition(@RequestParam(name="id") String id) throws Exception {
-		return eventRepository.findDefinition(id);
-	}
-	
-	@RequestMapping(value="/organization/eventDefinition", method=RequestMethod.GET)
-	public EventDefinition getEventDefinition(@RequestParam(name="eventName") String eventName, @RequestParam(name="orgId") String orgId, @RequestParam(name="workspace") String workspace) throws Exception {
-		return eventRepository.findDefinitionByOrgId(orgId, workspace, eventName);
-	}
-	
-	@RequestMapping(value="/organization/eventDefinition", method=RequestMethod.PUT)
-	public void saveEventDefinition(@RequestBody EventDefinition eventDefinition)  throws Exception {
-		//eventDefinition.setId(RepositoryUtil.getDocumentId());
-		eventRepository.saveDefinition(eventDefinition);
-	}
-	
-	@RequestMapping(value="/organization/eventDefinition", method=RequestMethod.POST)
-	public void updateEventDefinition(@RequestBody EventDefinition eventDefinition)  throws Exception {
-		eventRepository.updateDefinition(eventDefinition);
-	}
-	
-	@RequestMapping(value="/organization/eventDefinition", method=RequestMethod.DELETE)
-	public void deleteEventDefinition(@RequestParam(name="id") String id)  throws Exception {
-		eventRepository.deleteDefinition(id);
-	}
+
 	
 	@RequestMapping(value="/organization/workspace", method=RequestMethod.PUT)
 	public void saveWorkspace(@RequestBody Workspace orgWorkspace)  throws Exception {
@@ -148,13 +118,5 @@ public class DAOController {
 	
 
 	
-	@RequestMapping(value="/organization/events", method=RequestMethod.GET)
-	public List<Event> getEvents(@RequestParam(name="orgId") String orgId, @RequestParam(name="workspace") String workspace)  throws Exception {
-		return eventRepository.getLatestEvents(orgId, workspace);
-	}
-	
-	@RequestMapping(value="/organization/eventCountsForPast7Days", method=RequestMethod.GET)
-	public List<EventCountsByDay> getEventCountsForPast7Days(@RequestParam(name="orgId") String orgId, @RequestParam(name="workspace") String workspace)  throws Exception {
-		return eventRepository.findEventCountsForPast7Days(orgId, workspace);
-	}
+
 }

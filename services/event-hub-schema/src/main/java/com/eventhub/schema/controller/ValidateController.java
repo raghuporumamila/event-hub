@@ -1,5 +1,6 @@
 package com.eventhub.schema.controller;
 
+import com.eventhub.schema.model.ValidateJsonData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,9 +19,8 @@ public class ValidateController {
 	
 	@PostMapping(value="/validate")
 	@ResponseStatus(HttpStatus.OK)
-    public void validate(@RequestParam(name="jsonSchema") String jsonSchema, 
-    					 @RequestParam(name="jsonData") String jsonData) {
-		jsonSchemaValidator.validate(jsonSchema, jsonData);
+    public void validate(@RequestBody ValidateJsonData validateJsonData) {
+		jsonSchemaValidator.validate(validateJsonData.getSchema(), validateJsonData.getPayload());
 	}	
 	
 	@PostMapping(value="/validateData")

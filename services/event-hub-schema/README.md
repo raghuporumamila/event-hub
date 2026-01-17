@@ -1,5 +1,6 @@
 # event-hub-schema
-This micro service is responsible for validating the event hub event against schema defined for it. This is developed using SpringBoot and https://github.com/everit-org/json-schema
+This micro service is responsible for validating the event hub event against schema defined for it. 
+This is developed using SpringBoot and https://github.com/everit-org/json-schema
 
 From the following architecture diagram the red highlighted service represents this micro service
 ![alt text](Architecture.png)

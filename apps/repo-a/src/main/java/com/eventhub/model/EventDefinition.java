@@ -23,5 +23,6 @@ public class EventDefinition {
 	@JoinColumn(name = "workspace_id")
 	private Workspace workspace;
 	private String eventName;
+	@Column(name = "payload_schema", columnDefinition = "text")
 	private String payloadSchema;
 }

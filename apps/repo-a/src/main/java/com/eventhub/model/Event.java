@@ -26,4 +26,7 @@ public class Event {
 	private Workspace workspace;
 	private String timestamp;
 	private String payload;
+	@ManyToOne
+	@JoinColumn(name = "event_definition_id")
+	private EventDefinition eventDefinition;
 }

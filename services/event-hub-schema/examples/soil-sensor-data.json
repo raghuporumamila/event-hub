@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "sensor_id": "SOIL-PROBE-4492",
+    "timestamp": "2026-01-18T14:30:00Z",
+    "location": {
+      "lat": 41.8781,
+      "lon": -87.6298
+    },
+    "firmware_version": "v2.1.4"
+  },
+  "readings": {
+    "moisture": {
+      "value": 24.5,
+      "unit": "%",
+      "status": "optimal"
+    },
+    "soil_temp": {
+      "value": 18.2,
+      "unit": "°C"
+    },
+    "conductivity": {
+      "value": 1.2,
+      "unit": "mS/cm",
+      "description": "EC"
+    },
+    "ph_level": {
+      "value": 6.8,
+      "unit": "pH"
+    },
+    "nutrients": {
+      "nitrogen": 45,
+      "phosphorus": 12,
+      "potassium": 38,
+      "unit": "mg/kg"
+    }
+  },
+  "device_health": {
+    "battery_level": 88,
+    "signal_strength": -92,
+    "solar_charging": true
+  }
+}

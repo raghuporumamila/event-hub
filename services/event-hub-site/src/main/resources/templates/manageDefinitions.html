@@ -287,7 +287,7 @@ $(document).ready(function(){
 							</span>
 						</td>
                         <td th:text="${definition.eventName}"></td>
-						<td th:text="${definition.sourceName}"></td>
+						<td th:text="${definition.source.name}"></td>
                         <td>
                             <a th:href="'javascript:showEditDialog(\'' + ${definition.id} + '\');'" class="edit"><i class="material-icons" data-toggle="tooltip" title="Edit">&#xE254;</i></a>
                             <a href="#deleteModal" class="delete" data-toggle="modal"><i class="material-icons" data-toggle="tooltip" title="Delete">&#xE872;</i></a>
@@ -327,14 +327,14 @@ $(document).ready(function(){
 						</div>
 						<div class="form-group">
 							<label>Source</label>
-							<select class="form-control" name="sourceId">
+							<select class="form-control" name="source.id">
 					      <option th:each="source : ${sources}" th:value="${source.id}" th:text="${source.name}"></option>
 					    </select>
 						</div>
 						
 						<div class="form-group">
 							<label>Schema</label>
-							<textarea name="schema" cols="120" rows="25" class="form-control" required></textarea>
+							<textarea name="payloadSchema" cols="120" rows="25" class="form-control" required></textarea>
 						</div>
 					</div>
 					<div class="modal-footer">
@@ -373,7 +373,7 @@ $(document).ready(function(){
 	<script type="text/javascript">
 	
 		function createDefinition() {
-			$.post("/createDefinition", $( "#addDefinitionForm" ).serialize(),
+			$.post("/site/v1/createDefinition", $( "#addDefinitionForm" ).serialize(),
 		    function(data,status){
 		      if (status == 'success') {
 		    	  $('#addModal').modal('hide')

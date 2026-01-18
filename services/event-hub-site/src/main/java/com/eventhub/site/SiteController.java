@@ -66,6 +66,13 @@ public class SiteController {
 	}
 
 
+	private Source getSource(Long orgId, Long workspaceId, Long sourceId) {
+		String url = apiEndPointUri.getDaoApiEndpoint() + "/organizations/" + orgId +
+				"/workspaces/" + workspaceId + "/sources/" + sourceId;
+		return restTemplate.exchange(url, HttpMethod.GET, null,
+				new ParameterizedTypeReference<Source>() {
+				}).getBody();
+	}
 	@GetMapping(value = "/definitions")
 	public ModelAndView definitions(@ModelAttribute("user") User user) {
 		HttpHeaders headers = new HttpHeaders();
@@ -98,23 +105,24 @@ public class SiteController {
 		return modelAndView;
 	}
 
-	/*
 	@PostMapping(value = "/createDefinition")
-	public ModelAndView createDefinition(@ModelAttribute("user") User user, @ModelAttribute EventDefinition eventDefinition) {
+	public ModelAndView createDefinition(@ModelAttribute("user") User user,
+										 @ModelAttribute EventDefinition eventDefinition) {
 		System.out.println("Entered in createDefinition == " + eventDefinition.getEventName());
 		eventDefinition.setOrganization(user.getOrganization());
 		eventDefinition.setWorkspace(user.getDefaultWorkspace());
-		
+		Source source = getSource(user.getOrganization().getId(), user.getDefaultWorkspace().getId(), eventDefinition.getSource().getId());
 		HttpEntity<EventDefinition> requestUpdate = new HttpEntity<>(eventDefinition, (HttpHeaders) null);
-		ResponseEntity<String> response = restTemplate.exchange( apiEndPointUri.getDaoApiEndpoint() + "/organization/eventDefinition", HttpMethod.PUT, requestUpdate , String.class );
+		String url = apiEndPointUri.getDaoApiEndpoint() + "/organizations/" + user.getOrganization().getId() +
+				"/workspaces/" + user.getDefaultWorkspace().getId() + "/eventDefinitions";
+		ResponseEntity<EventDefinition> response = restTemplate.exchange(url, HttpMethod.POST, requestUpdate , EventDefinition.class );
 	
 		if (!response.getStatusCode().equals(HttpStatus.OK)) {
-			throw new RuntimeException(response.getBody());
+			throw new RuntimeException(response.getBody().toString());
 		}
-
 		return definitions(user);
 	}
-	
+	/*
 	@GetMapping(value = "/editDefinition")
 	public ModelAndView editDefinition(@ModelAttribute("user") User user, @RequestParam(name="id") String id) {
 		HttpHeaders headers = new HttpHeaders();
@@ -379,23 +387,29 @@ public class SiteController {
 
 	@PostMapping(value = "/validateEventData")
 	@ResponseStatus(HttpStatus.OK)
-	public void validateEventData(@RequestParam(name="eventId") String eventId, @RequestParam(name="jsonData") String jsonData) {
+	public void validateEventData(@ModelAttribute("user") User user,
+								  @RequestParam(name="eventId") String eventId,
+								  @RequestParam(name="jsonData") String jsonData) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 
-		EventDefinition definition = restTemplate.exchange(apiEndPointUri.getDaoApiEndpoint() + "/eventDefinition?id=" +
-				eventId, HttpMethod.GET, null,
+		String url = apiEndPointUri.getDaoApiEndpoint() + "/organizations/" + user.getOrganization().getId() +
+				"/workspaces/" +user.getDefaultWorkspace().getId() + "/eventDefinitions/" + eventId;
+		EventDefinition definition = restTemplate.exchange(url, HttpMethod.GET, null,
 				new ParameterizedTypeReference<EventDefinition>() {
 				}).getBody();
 
 		HttpHeaders headers1 = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
+		/*
 		MultiValueMap<String, String> map= new LinkedMultiValueMap<String, String>();
 		map.add("jsonSchema",  definition.getPayloadSchema());
-		map.add("jsonData",  jsonData);
-
-		HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(map, headers1);
+		map.add("jsonData",  jsonData);*/
+		ValidateJsonData validateJsonData = new ValidateJsonData();
+		validateJsonData.setPayload(jsonData);
+		validateJsonData.setSchema(definition.getPayloadSchema());
+		HttpEntity<ValidateJsonData> request = new HttpEntity<ValidateJsonData>(validateJsonData, headers1);
 
 		ResponseEntity<String> response = restTemplate.postForEntity( apiEndPointUri.getSchemaApiEndpoint() + "/validate", request , String.class );
 

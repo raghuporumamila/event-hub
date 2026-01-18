@@ -27,7 +27,7 @@
 </form>
 <script>
 function validateData() {
-$.post("/validateEventData",
+$.post("/site/v1/validateEventData",
     {
       eventId: $('#eventTesterDefinitionId').val(),
       jsonData: $('#jsonData').val()

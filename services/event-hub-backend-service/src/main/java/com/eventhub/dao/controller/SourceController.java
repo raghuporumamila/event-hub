@@ -40,9 +40,14 @@ public class SourceController {
         sourceTypeRepository.delete(sourceType);
     }
 
+    @RequestMapping(value = "{sourceId}", method=RequestMethod.GET)
+    public Source getSource(@PathVariable Long sourceId)  throws Exception {
+        return sourceTypeRepository.findById(sourceId).get();
+    }
+
     @RequestMapping(method=RequestMethod.GET)
     public List<Source> getSourceTypes(@PathVariable Long orgId,
-                                       @PathVariable String workspaceId)  throws Exception {
+                                       @PathVariable Long workspaceId)  throws Exception {
         return sourceTypeRepository.getSources(orgId, workspaceId);
     }
 }

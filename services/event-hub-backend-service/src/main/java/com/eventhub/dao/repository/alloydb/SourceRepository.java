@@ -10,5 +10,5 @@ import java.util.List;
 @Repository
 public interface SourceRepository extends ListCrudRepository<Source, Long> {
     @Query("SELECT d FROM Source d WHERE d.organization.id = :orgId and d.workspace.id=:workspaceId")
-    List<Source> getSources(Long orgId, String workspaceId);
+    List<Source> getSources(Long orgId, Long workspaceId);
 }

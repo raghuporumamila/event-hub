@@ -20,7 +20,7 @@ public class EventDefinitionController {
     }
 
     @RequestMapping(value="/{id}", method=RequestMethod.GET)
-    public EventDefinition getEventDefinition(@RequestParam(name="id") Long id) throws Exception {
+    public EventDefinition getEventDefinition(@PathVariable Long id) throws Exception {
         return eventDefinitionRepository.findById(id).get();
     }
 

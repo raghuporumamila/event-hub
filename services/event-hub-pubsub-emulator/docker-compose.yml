@@ -1,0 +1,10 @@
+services:
+  pubsub:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+    command: > 
+      /bin/sh -c "gcloud beta emulators pubsub start --host-port=0.0.0.0:8085 &
+      sleep 5;
+      gcloud pubsub topics create event-hub-topic;
+      wait" 
+    ports:
+      - "8085:8085"

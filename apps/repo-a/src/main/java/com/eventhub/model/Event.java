@@ -3,6 +3,8 @@ package com.eventhub.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serializable;
+
 
 @Entity
 @Getter // Only generate getters
@@ -10,7 +12,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "event", schema = "event")
-public class Event {
+public class Event implements Serializable {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -25,6 +27,7 @@ public class Event {
 	@JoinColumn(name = "workspace_id")
 	private Workspace workspace;
 	private String timestamp;
+	@Column(name = "payload", columnDefinition = "text")
 	private String payload;
 	@ManyToOne
 	@JoinColumn(name = "event_definition_id")

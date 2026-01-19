@@ -4,13 +4,15 @@ package com.eventhub.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serializable;
+
 @Entity
 @Getter // Only generate getters
 @Setter // Only generate setters
 @NoArgsConstructor
 @AllArgsConstructor
 @Table (name="workspace", schema = "security")
-public class Workspace {
+public class Workspace implements Serializable {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;

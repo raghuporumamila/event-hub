@@ -11,3 +11,7 @@ This step needs to be executed only if you are running the AlloyDB for the first
     - 3_role.sql
     - 4_user.sql
     - 5_workspace.sql
+    - 6_source.sql
+    - 7_target.sql
+    - 8_event_definition.sql
+    - 9_event.sql

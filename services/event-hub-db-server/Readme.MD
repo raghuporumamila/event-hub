@@ -1,5 +1,7 @@
 # Event Hub DB Server
 This DB server hosts the data of organizations events, sources and integrations.
+
+![alt text](Architecture.png)
 ## Running persistent Alloy DB server on docker
 docker compose up -d
 ## Initial SQL files execution

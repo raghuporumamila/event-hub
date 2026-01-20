@@ -193,14 +193,14 @@
 		}
 		function showConsumers() {
 			$('#contentArea').html("<font color='green'>Loading.......</font>");
-			$.get('/consumers', function(data) {
+			$.get('/site/v1/consumers', function(data) {
 				  $('#contentArea').html(data);
 			});
 		}
 		
 		function showWorkspaces() {
 			$('#contentArea').html("<font color='green'>Loading.......</font>");
-			$.get('/manageWorkspaces', function(data) {
+			$.get('/site/v1/manageWorkspaces', function(data) {
 				  $('#contentArea').html(data);
 			});
 		}

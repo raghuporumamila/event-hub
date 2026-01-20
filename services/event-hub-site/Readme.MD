@@ -1,5 +1,7 @@
 # Event Hub Site
 This is a event hub web application(i.e., EventHubSite in the architure diagram) that lets the organization users to log in and manage the events, sources, targets, integrations and consumer profiles. This service is developed using SpringBoot MVC, Bootstrap CSS and Spring Thymeleaf.
+## Application walkthrough Recording
+(https://drive.google.com/file/d/1iD8wZnazj9r_KQYI12XPWV-eFUalw0S7/view?usp=sharing)
 
 ![alt text](Architecture.png)
 

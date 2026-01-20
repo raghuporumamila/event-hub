@@ -30,10 +30,10 @@
 <br/>
 <h5>Select Workspace to change</h5>
 <div class="list-group">
-  <a th:href="'javascript:changeWorkspace(\'' + ${workspace.name} + '\');'" class="list-group-item list-group-item-action" th:classappend="${user.defaultWorkspace == workspace.name} ? 'active' : ''" 
+  <a th:href="'javascript:changeWorkspace(\'' + ${workspace.id} + '\');'" class="list-group-item list-group-item-action" th:classappend="${user.defaultWorkspace == workspace.name} ? 'active' : ''"
   		th:each="workspace : ${workspaces}" th:text="${user.defaultWorkspace == workspace.name} ? ${workspace.name} + ' (Currently selected workspace)' : ${workspace.name}"></a>
 </div>
-<form id="workspaceChangeForm" method="POST" action="/changeWorkspace">
+<form id="workspaceChangeForm" method="POST" action="/site/v1/changeWorkspace">
 	<input type="hidden" id="workspace" name="workspace"/>
 </form>
 <script>
@@ -43,7 +43,7 @@
 	}
 	
 	function createWorkspace() {
-		$("#workspaceChangeForm").attr('action', '/createWorkspace');
+		$("#workspaceChangeForm").attr('action', '/site/v1/createWorkspace');
 		$('#workspace').val($('#workspaceName').val())
 		 $("#workspaceChangeForm").submit();
 	}

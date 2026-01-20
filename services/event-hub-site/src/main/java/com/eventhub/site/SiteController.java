@@ -290,8 +290,10 @@ public class SiteController {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 
-		List<Consumer> consumers = restTemplate.exchange(apiEndPointUri.getDaoApiEndpoint() + "/organization/consumers?orgId=" +
-				user.getOrganization().getId() + "&workspace=" + user.getDefaultWorkspace(), HttpMethod.GET, null,
+		String url = apiEndPointUri.getDaoApiEndpoint() + "/organizations/" + user.getOrganization().getId() +
+				"/workspaces/" + user.getDefaultWorkspace().getId() + "/consumers";
+
+		List<Consumer> consumers = restTemplate.exchange(url, HttpMethod.GET, null,
 				new ParameterizedTypeReference<List<Consumer>>() {
 				}).getBody();
 		model.addAttribute("consumers", consumers);
@@ -304,8 +306,9 @@ public class SiteController {
 	public ModelAndView manageWorkspaces(@ModelAttribute("user") User user) {
 		ModelAndView modelAndView = new ModelAndView();
 		System.out.println("User org id == " + user.getOrganization().getId());
-		List<Workspace> workspaces = restTemplate.exchange(apiEndPointUri.getDaoApiEndpoint() + "/organization/workspaces?orgId=" +
-						user.getOrganization().getId() , HttpMethod.GET, null,
+		String url = apiEndPointUri.getDaoApiEndpoint() + "/organizations/" + user.getOrganization().getId() +
+				"/workspaces";
+		List<Workspace> workspaces = restTemplate.exchange(url, HttpMethod.GET, null,
 				new ParameterizedTypeReference<List<Workspace>>() {
 				}).getBody();
 		modelAndView.addObject("workspaces", workspaces);
@@ -319,7 +322,7 @@ public class SiteController {
 		workspaceObj.setName(workspace);
 		workspaceObj.setOrganization(user.getOrganization());
 		HttpEntity<Workspace> requestUpdate = new HttpEntity<>(workspaceObj, (HttpHeaders) null);
-		ResponseEntity<Void> response = restTemplate.exchange( apiEndPointUri.getDaoApiEndpoint() + "/organizations/" + user.getOrganization().getId() + "/users/" +  user.getId() + "/workspaces", HttpMethod.PUT, requestUpdate , Void.class );
+		ResponseEntity<Void> response = restTemplate.exchange( apiEndPointUri.getDaoApiEndpoint() + "/organizations/" + user.getOrganization().getId() + "/workspaces", HttpMethod.PUT, requestUpdate , Void.class );
 		user.setDefaultWorkspace(workspaceObj);
 		if (!response.getStatusCode().equals(HttpStatus.OK)) {
 			throw new RuntimeException(response.toString());
@@ -342,6 +345,20 @@ public class SiteController {
 		map.add("userId",  user.getId().toString());
 		map.add("workspace",  workspace);
 		System.out.println("workspace == " + workspace);
+
+		String url = apiEndPointUri.getDaoApiEndpoint() + "/organizations/" + user.getOrganization().getId() +
+				"/workspaces/" + workspace + "?userId=" + user.getId();
+
+		//restTemplate.exchange(url, HttpMethod.PUT, null,  null).getBody();
+		//Change workspace
+		ResponseEntity<Void> response = restTemplate.exchange( url, HttpMethod.PUT, null , Void.class );
+
+		url = apiEndPointUri.getDaoApiEndpoint() + "/organizations/" + user.getOrganization().getId() +
+				"/workspaces/" + workspace;
+		Workspace workspaceObj = restTemplate.exchange(url, HttpMethod.GET, null,
+				new ParameterizedTypeReference<Workspace>() {
+				}).getBody();
+		user.setDefaultWorkspace(workspaceObj);
 		/*
 		HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(map, headers1);
 

@@ -19,14 +19,6 @@ public class DAOController {
 	
 	@Autowired
 	private TargetRepository targetRepository;
-	
-	@Autowired
-	private ConsumerRepository consumerRepository;
-
-
-
-	@Autowired
-	private WorkspaceRepository workspaceRepository;
 
 	@Autowired RoleRepository roleRepository;
 
@@ -60,20 +52,7 @@ public class DAOController {
 	}
 
 
-	@RequestMapping(value="/organizations/{orgId}/users/{userId}/workspaces", method=RequestMethod.PUT)
-	public void changeWorkspace(@PathVariable(name="orgId") Long orgId,
-								@PathVariable(name="userId") Long userId,
-								@RequestBody Workspace workspace) throws Exception {
 
-		Optional<Organization> organization = orgRepository.findById(orgId);
-        organization.ifPresent(workspace::setOrganization);
-		workspace = workspaceRepository.save(workspace);
-		Optional<User> user = userRepository.findById(userId);
-		if (user.isPresent()) {
-			user.get().setDefaultWorkspace(workspace);
-		}
-        user.ifPresent(value -> userRepository.save(value));
-	}
 
 	
 	@RequestMapping(value="/organizations/{orgId}/users", method=RequestMethod.GET)
@@ -99,24 +78,4 @@ public class DAOController {
 	}*/
 	
 	//Consumers
-	@RequestMapping(value="/organization/consumers", method=RequestMethod.GET)
-	public List<Consumer> getConsumers(@RequestParam(name="orgId") String orgId, @RequestParam(name="workspace") String workspace) throws Exception {
-		return consumerRepository.findByOrgId(orgId, workspace);
-	}
-	
-
-	
-	@RequestMapping(value="/organization/workspace", method=RequestMethod.PUT)
-	public void saveWorkspace(@RequestBody Workspace orgWorkspace)  throws Exception {
-		workspaceRepository.save(orgWorkspace);
-	}
-	
-	@RequestMapping(value="/organization/workspaces", method=RequestMethod.GET)
-	public List<Workspace> getWorkspaces(@RequestParam(name="orgId") String orgId)  throws Exception {
-		return workspaceRepository.getWorkspaces(orgId);
-	}
-	
-
-	
-
 }

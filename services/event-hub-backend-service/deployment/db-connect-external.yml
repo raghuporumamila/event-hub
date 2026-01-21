@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-db
+spec:
+  ports:
+    - protocol: TCP
+      port: 5432       # Port the app will use
+      targetPort: 5432 # Port the actual DB is listening on

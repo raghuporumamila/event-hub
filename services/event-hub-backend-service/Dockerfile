@@ -1,14 +1,15 @@
-# Use a lightweight JRE image
-FROM eclipse-temurin:17-jre-alpine
+# Use an official JDK runtime as a parent image
+FROM eclipse-temurin:17-jdk
 
-# Set the working directory
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy the JAR file from your target/build folder
-COPY target/*.jar app.jar
+# Copy the executable JAR from your host to the container
+# Replace 'your-app-name.jar' with the actual name of your generated JAR
+COPY target/event-hub-service-v2-1.0.0.jar app.jar
 
-# Expose the default Spring Boot port
+# Expose the port your Spring Boot app runs on (default is 8080)
 EXPOSE 8080
 
-# Run the application
+# Run the JAR file
 ENTRYPOINT ["java", "-jar", "app.jar"]

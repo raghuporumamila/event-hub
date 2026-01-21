@@ -2,7 +2,7 @@ spring:
   # 1. You can remove the H2 console section as it's not used for AlloyDB
   datasource:
     # 2. Update the JDBC URL, driver, and credentials
-    url: jdbc:postgresql://localhost:5432/eventhub
+    url: jdbc:postgresql://192.168.4.152:5432/eventhub
     driver-class-name: org.postgresql.Driver
     username: postgres  # Default user for AlloyDB Omni
     password: password # Set when you started the container

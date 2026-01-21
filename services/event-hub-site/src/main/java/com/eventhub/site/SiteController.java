@@ -220,36 +220,43 @@ public class SiteController {
 
 		return "sourceType";
 	}
-	/*
+
 	@PostMapping(value = "/createSource")
-	public String createSource(Model model, @ModelAttribute("user") User user, @RequestParam(name="name") String name, @RequestParam(name="type") String type) {
-		SourceType sourceType = new SourceType();
-		sourceType.setName(name);
-		sourceType.setType(type);
-		sourceType.setWorkspace(user.getDefaultWorkspace());
-		HttpEntity<SourceType> requestUpdate = new HttpEntity<>(sourceType, (HttpHeaders) null);
-		
-		ResponseEntity<String> response = restTemplate.exchange( apiEndPointUri.getDaoApiEndpoint() + "/organization/sourceType?orgId=" + user.getOrganization().getId(), HttpMethod.PUT, requestUpdate , String.class );
+	public String createSource(Model model, @ModelAttribute("user") User user,
+							   @RequestParam(name="name") String name,
+							   @RequestParam(name="type") String type) {
+		Source source = new Source();
+		source.setName(name);
+		SourceTypeEnum sourceTypeEnum = SourceTypeEnum.valueOf(type);
+		source.setType(sourceTypeEnum);
+		source.setWorkspace(user.getDefaultWorkspace());
+		HttpEntity<Source> requestUpdate = new HttpEntity<>(source, (HttpHeaders) null);
+		String url = apiEndPointUri.getDaoApiEndpoint() + "/organizations/" + user.getOrganization().getId() +
+				"/workspaces/" + user.getDefaultWorkspace().getId() + "/sources";
+		ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.POST, requestUpdate , Void.class );
 	
 		if (!response.getStatusCode().equals(HttpStatus.OK)) {
-			throw new RuntimeException(response.getBody());
+			throw new RuntimeException(response.getBody().toString());
 		}
 		return sources(model, user);
 	}
 
 	@PostMapping(value = "/deleteSource")
-	public String deleteSource(Model model, @ModelAttribute("user") User user, @RequestParam(name="id") String id) {
-		SourceType sourceType = new SourceType();
-		sourceType.setId(id);
-		HttpEntity<SourceType> requestUpdate = new HttpEntity<>(sourceType, (HttpHeaders) null);
-		ResponseEntity<String> response = restTemplate.exchange( apiEndPointUri.getDaoApiEndpoint() + "/organization/sourceType?orgId=" + user.getOrganization().getId(), HttpMethod.DELETE, requestUpdate , String.class );
+	public String deleteSource(Model model, @ModelAttribute("user") User user,
+							   @RequestParam(name="id") Long id) {
+		Source source = new Source();
+		source.setId(id);
+		HttpEntity<Source> requestUpdate = new HttpEntity<>(source, (HttpHeaders) null);
+		String url = apiEndPointUri.getDaoApiEndpoint() + "/organizations/" + user.getOrganization().getId() +
+				"/workspaces/" + user.getDefaultWorkspace().getId() + "/sources";
+		ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.DELETE, requestUpdate , Void.class );
 	
 		if (!response.getStatusCode().equals(HttpStatus.OK)) {
-			throw new RuntimeException(response.getBody());
+			throw new RuntimeException(response.getBody().toString());
 		}
 		return sources(model, user);
 	}
-*/
+
 	@GetMapping(value = "/targets")
 	public String targets(Model model, @ModelAttribute("user") User user) {
 		HttpHeaders headers = new HttpHeaders();

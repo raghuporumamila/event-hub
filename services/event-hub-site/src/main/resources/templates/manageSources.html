@@ -97,7 +97,8 @@ $(document).ready(function(){
 							<label>Type</label>
 							<select id="type" name="type" class="form-control">
 								<option>Select....</option>
-      							<option th:each="sourceType : ${sourceTypes}" th:value="${sourceType.id}" th:text="${sourceType.type}"></option>
+
+      							<option th:each="sourceType : ${T(com.eventhub.model.SourceTypeEnum).values()}" th:value="${sourceType.name()}" th:text="${sourceType.name()}"></option>
     						</select>
 						</div>
 					</div>
@@ -165,7 +166,7 @@ $(document).ready(function(){
 	
 	<script>
 		function addSource() {
-			$.post("/createSource", $( "#addSourceForm" ).serialize(),
+			$.post("/site/v1/createSource", $( "#addSourceForm" ).serialize(),
 		    function(data,status){
 		      if (status == 'success') {
 		    	  $('#addModal').modal('hide')
@@ -180,7 +181,7 @@ $(document).ready(function(){
 		
 		function deleteSource(id) {
 			//alert($('#checkbox1:checked').val())
-			$.post("/deleteSource?id=" + $('#checkbox1:checked').val(), 
+			$.post("/site/v1/deleteSource?id=" + $('#checkbox1:checked').val(),
 		    function(data,status){
 		      if (status == 'success') {
 		    	  $('#deleteModal').modal('hide')

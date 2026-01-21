@@ -5,22 +5,14 @@ From the following diagram the green highlighted service represents this micro s
 
 ![alt text](Architecture.png)
 
-## Building docker
-mvn clean package
-docker build -t event-hub-service-v2 .
-kubectl apply -f deployment/deploy.yml
-kubectl apply -f deployment/db-connect-external.yml
-kubectl apply -f deployment/db-connect-endpoint.yml
-kubectl logs -f event-hub-service-v2-app-5d64d6ddb-p6bgb
-
-
+## Building docker and deploying to local Kubernetes
+mvn clean package 
+docker build -t event-hub-service-v2 . 
+kubectl apply -f deployment/deploy.yml 
+kubectl apply -f deployment/db-connect-external.yml 
+kubectl apply -f deployment/db-connect-endpoint.yml 
+kubectl logs -f event-hub-service-v2-app-5d64d6ddb-p6bgb 
 kubectl delete -f deployment/deploy.yml
-
-## Running docker in local
-docker run -p 8080:8080 -v /Users/Raghu/Downloads/:/var/Downloads -e GOOGLE_APPLICATION_CREDENTIALS='/var/Downloads/firestore-svc.json' -e GOOGLE_CLOUD_PROJECT='event-hub-249001' -t gcr.io/event-hub-249001/event-hub-dao:0.0.1-SNAPSHOT
-
-## Pushing to container registry
-mvn compile jib:build
 
 ## Deploying to GKE
 kubectl apply -f deployment.yaml

@@ -5,14 +5,14 @@ From the following diagram the green highlighted service represents this micro s
 
 ![alt text](Architecture.png)
 
-## Building docker and deploying to local Kubernetes
-mvn clean package 
-docker build -t event-hub-service-v2 . 
-kubectl apply -f deployment/deploy.yml 
-kubectl apply -f deployment/db-connect-external.yml 
-kubectl apply -f deployment/db-connect-endpoint.yml 
-kubectl logs -f event-hub-service-v2-app-5d64d6ddb-p6bgb 
-kubectl delete -f deployment/deploy.yml
+## Building docker and deploying to local Kubernetes(i.e., Docker kubeadm)
+- mvn clean package 
+- docker build -t event-hub-service-v2 . 
+- kubectl apply -f deployment/deploy.yml 
+- kubectl apply -f deployment/db-connect-external.yml 
+- kubectl apply -f deployment/db-connect-endpoint.yml 
+- kubectl logs -f event-hub-service-v2-app-5d64d6ddb-p6bgb 
+- kubectl delete -f deployment/deploy.yml
 
 ## Deploying to GKE
 kubectl apply -f deployment.yaml

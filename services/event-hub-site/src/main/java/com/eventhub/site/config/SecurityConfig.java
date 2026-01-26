@@ -19,7 +19,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/site/v1/**").hasAnyRole("OrgUser", "OrgAdmin", "SuperUser")
                         .requestMatchers("/site/security/v1", "/css/**", "/images/**", "/js/**",
-                                "/countryAndStates.json","/localLogin.html").permitAll()
+                                "/countryAndStates.json","/localLogin.html", "/", "/genAIChat").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form

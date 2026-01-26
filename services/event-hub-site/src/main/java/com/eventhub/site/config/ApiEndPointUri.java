@@ -1,5 +1,7 @@
 package com.eventhub.site.config;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -7,32 +9,16 @@ import org.springframework.context.annotation.Profile;
 
 @Configuration
 @ConfigurationProperties("evenhub.rest.client")
+@Getter
+@Setter
 public class ApiEndPointUri {
 
 	private String daoApiEndpoint;
 	private String schemaApiEndpoint;
 	private String publisherApiEndpoint;
-	
-	public String getDaoApiEndpoint() {
-		return daoApiEndpoint;
-	}
-	public void setDaoApiEndpoint(String daoApiEndpoint) {
-		this.daoApiEndpoint = daoApiEndpoint;
-	}
-	public String getSchemaApiEndpoint() {
-		return schemaApiEndpoint;
-	}
-	public void setSchemaApiEndpoint(String schemaApiEndpoint) {
-		this.schemaApiEndpoint = schemaApiEndpoint;
-	}
-	public String getPublisherApiEndpoint() {
-		return publisherApiEndpoint;
-	}
-	public void setPublisherApiEndpoint(String publisherApiEndpoint) {
-		this.publisherApiEndpoint = publisherApiEndpoint;
-	}
-	
-	@Profile("local")
+	private String genAIAPIEndpoint;
+
+    @Profile("local")
 	@Bean
 	public String localRestClientProperties() {
 		

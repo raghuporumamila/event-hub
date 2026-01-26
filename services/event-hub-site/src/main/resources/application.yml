@@ -19,6 +19,8 @@ spring:
 evenhub:
   rest:
     client:
-      daoApiEndpoint: http://192.168.4.152:30080
+      #daoApiEndpoint: http://192.168.4.152:30080
+      daoApiEndpoint: http://localhost:8081
       schemaApiEndpoint: http://localhost:8082
       publisherApiEndpoint: http://localhost:8083
+      genAIAPIEndpoint: http://localhost:8000

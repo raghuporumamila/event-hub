@@ -314,7 +314,7 @@ $(document).ready(function(){
 	<div id="addEmployeeModal" class="modal fade">
 		<div class="modal-dialog">
 			<div class="modal-content">
-				<form>
+				<form id="addTargetForm">
 					<div class="modal-header">						
 						<h4 class="modal-title">Add Target</h4>
 						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -322,16 +322,23 @@ $(document).ready(function(){
 					<div class="modal-body">					
 						<div class="form-group">
 							<label>Name</label>
-							<input type="text" class="form-control" required>
+							<input type="text" id="name" name="name" class="form-control" required>
 						</div>
 						<div class="form-group">
-							<label>Config Template</label>
-							<input type="email" class="form-control" required>
+							<label>Type</label>
+							<select id="type" name="type" class="form-control">
+								<option>Select....</option>
+								<option th:each="targetType : ${T(com.eventhub.model.TargetTypeEnum).values()}" th:value="${targetType.name()}" th:text="${targetType.name()}"></option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label for="credentials">Credentials</label>
+							<textarea id="credentials" name="credentials" class="form-control" rows="5" required></textarea>
 						</div>
 					</div>
 					<div class="modal-footer">
 						<input type="button" class="btn btn-default" data-dismiss="modal" value="Cancel">
-						<input type="submit" class="btn btn-success" value="Add">
+						<input type="button" class="btn btn-success" value="Add" onclick="addTarget()">
 					</div>
 				</form>
 			</div>
@@ -341,7 +348,7 @@ $(document).ready(function(){
 	<div id="editEmployeeModal" class="modal fade">
 		<div class="modal-dialog">
 			<div class="modal-content">
-				<form>
+				<form id="editTargetForm">
 					<div class="modal-header">						
 						<h4 class="modal-title">Edit Target</h4>
 						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -385,5 +392,35 @@ $(document).ready(function(){
 			</div>
 		</div>
 	</div>
+		<script>
+			async function addTarget() {
+				// 1. Extract data using FormData
+
+				const formData = new FormData(document.querySelector('#addTargetForm'));
+
+				// 2. Convert to a plain object
+				const data = Object.fromEntries(formData.entries());
+
+				// 3. Send via Fetch
+				try {
+					const response = await fetch('/site/v1/createTarget', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json'
+						},
+						body: JSON.stringify(data)
+					});
+
+					if (response.ok) {
+						const result = await response.text();
+						$('#addModal').modal('hide')
+						$('.modal-backdrop').remove();
+						$("#contentArea").html(result)
+					}
+				} catch (error) {
+					console.error("Fetch error:", error);
+				}
+			}
+		</script>
 </body>
 </html>                                		                            

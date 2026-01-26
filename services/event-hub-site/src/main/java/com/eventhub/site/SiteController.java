@@ -24,7 +24,6 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.security.core.userdetails.UserDetails;
 import com.eventhub.site.config.ApiEndPointUri;
 import com.eventhub.site.form.IntegrationsForm;
-import com.eventhub.site.form.RegistrationForm;
 
 @Controller
 @SessionAttributes("user")
@@ -271,7 +270,21 @@ public class SiteController {
 		return "manageTargets";
 	}
 
-	@GetMapping(value = "/integrations")
+	@PostMapping(value = "/createTarget")
+	public String createTarget(Model model, @ModelAttribute("user") User user,
+							   @RequestBody Target target) {
+		target.setWorkspace(user.getDefaultWorkspace());
+		HttpEntity<Target> requestUpdate = new HttpEntity<>(target, (HttpHeaders) null);
+		String url = apiEndPointUri.getDaoApiEndpoint() + "/organizations/" + user.getOrganization().getId() +
+				"/workspaces/" + user.getDefaultWorkspace().getId() + "/targets";
+		ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.POST, requestUpdate , Void.class );
+
+		if (!response.getStatusCode().equals(HttpStatus.OK)) {
+			throw new RuntimeException(response.getBody().toString());
+		}
+		return targets(model, user);
+	}
+	@GetMapping(value = "/manageIntegrations")
 	public String integrations(Model model, @ModelAttribute("user") User user) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
@@ -287,10 +300,35 @@ public class SiteController {
 		List<Target> targets = restTemplate.exchange(baseUrl + "/targets", HttpMethod.GET, null,
 				new ParameterizedTypeReference<List<Target>>() {
 				}).getBody();
+
+		/*
+		List<Integration> integrations = restTemplate.exchange(baseUrl + "/integrations", HttpMethod.GET, null,
+				new ParameterizedTypeReference<List<Integration>>() {
+				}).getBody();
+		model.addAttribute("integrations", integrations);
+		 */
 		model.addAttribute("targets", targets);
 		model.addAttribute("integrationsForm", new IntegrationsForm());
 		return "manageIntegrations";
 	}
+
+	@GetMapping(value = "/getIntegration")
+	@ResponseBody
+	public ResponseEntity<Integration> getIntegration(Model model, @ModelAttribute("user") User user, @RequestParam Long sourceId) {
+		HttpHeaders headers = new HttpHeaders();
+		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+		String baseUrl = apiEndPointUri.getDaoApiEndpoint() +
+				"/organizations/" + user.getOrganization().getId() +
+				"/workspaces/" + user.getDefaultWorkspace().getId();
+
+		Integration integration = restTemplate.exchange(baseUrl + "/integrations?sourceId=" + sourceId, HttpMethod.GET, null,
+				new ParameterizedTypeReference<Integration>() {
+				}).getBody();
+
+		return ResponseEntity.ok(integration);
+	}
+
+
 
 	@GetMapping(value = "/consumers")
 	public String consumers(@ModelAttribute("user") User user, Model model) {

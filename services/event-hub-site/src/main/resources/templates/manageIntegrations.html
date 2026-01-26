@@ -1,53 +1,91 @@
-<br>
-<br>
+<div class="container mt-5">
+    <h3>Setup Integrations</h3>
+    <div class="row">
+        <div class="col-md-4">
+            <label class="form-label"><strong>1. Select a Source</strong></label>
+            <div class="list-group" id="sourceList">
+                <button type="button"
+                        th:each="src : ${sources}"
+                        th:data-id="${src.id}"
+                        class="list-group-item list-group-item-action source-item">
+                    <span th:text="${src.name}">Source Name</span>
+                </button>
+            </div>
+        </div>
 
-<br>
-<div class="container">
-	<form action="#" th:action="@{/integrationsForm}" th:object="${integrationsForm}">
-	<div class="row">
-		<div class="col-sm-6">
-			<div class="card">
-				<div class="card-body">
-					<h5 class="card-title">Sources</h5>
-					<div class="custom-control custom-radio"
-						th:each="source : ${sources}">
-						<!-- <input type="radio" id="customRadio1" name="customRadio"
-							class="custom-control-input"> <label
-							class="custom-control-label" for="customRadio1"
-							th:text="${source.name}"> -->
-						<input type="radio" th:field="*{radioButtonSelectedValue}" th:value="${source.id}"
-							class="custom-control-input"> <label
-							th:for="${#ids.prev('radioButtonSelectedValue')}"
-							class="custom-control-label" 
-							th:text="${source.name}"></label>
-					</div>
-
-				</div>
-			</div>
-		</div>
-		<div class="col-sm-6">
-			<div class="card">
-				<div class="card-body">
-					<h5 class="card-title">Targets</h5>
-					<div class="custom-control custom-checkbox"
-						th:each="target : ${targets}">
-						<!-- <input type="checkbox" class="custom-control-input"
-							id="customCheck1"> <label class="custom-control-label"
-							for="customCheck1" th:text="${target.name}"></label>
-							 -->
-						<input type="checkbox" class="custom-control-input" th:field="*{multiCheckboxSelectedValues}"
-							th:value="${target.id}"> <label class="custom-control-label"
-							th:for="${#ids.prev('multiCheckboxSelectedValues')}"
-							th:text="${target.name}"></label>
-					</div>
-
-					
-				</div>
-			</div>
-		</div>
-	</div>
-	<div>
-		<a href="#" class="btn btn-success">Apply Changes</a>
-	</div>
-	</form>
+        <div class="col-md-8">
+            <label class="form-label"><strong>2. Select Multiple Targets</strong></label>
+            <div class="card p-3">
+                <div th:each="tgt : ${targets}" class="form-check">
+                    <input class="form-check-input target-checkbox" type="checkbox"
+                           th:value="${tgt.id}" th:id="'tgt' + ${tgt.id}">
+                    <label class="form-check-label" th:for="'tgt' + ${tgt.id}" th:text="${tgt.name}">
+                        Target Name
+                    </label>
+                </div>
+                <hr>
+                <button id="submitBtn" class="btn btn-primary mt-3">Save Integrations</button>
+            </div>
+        </div>
+    </div>
 </div>
+<script>
+    $(document).ready(function() {
+        let selectedSourceId = null;
+
+        // Handle Source Selection
+        $('.source-item').on('click', function() {
+            $('.source-item').removeClass('active');
+            $(this).addClass('active');
+            selectedSourceId = $(this).data('id');
+            //$('#contentArea').html("<font color='green'>Loading.......</font>");
+            $.get('/site/v1/getIntegration?sourceId=' + selectedSourceId, function(data) {
+                $('.target-checkbox').prop('checked', false);
+                console.log(data);
+                $.each(data.targets, function(index, target) {
+                    //alert(target.id);
+                    // Accessing the 'target' object inside your Integration POJO
+                    const targetId = target.id;
+
+                    // 3. Find the checkbox with that ID and check it
+                    $('#tgt' + targetId).prop('checked', true);
+                });
+
+            });
+        });
+
+        // Submit Logic
+        $('#submitBtn').on('click', function() {
+            if (!selectedSourceId) {
+                alert("Please select a source first!");
+                return;
+            }
+
+            // Collect all checked targets
+            const targetIds = [];
+            $('.target-checkbox:checked').each(function() {
+                targetIds.push($(this).val());
+            });
+
+            // Create the payload
+            // We send a simple DTO to match your backend needs
+            const payload = {
+                sourceId: selectedSourceId,
+                targetIds: targetIds
+            };
+
+            $.ajax({
+                type: "POST",
+                url: "/api/integrations/save",
+                contentType: "application/json",
+                data: JSON.stringify(payload),
+                success: function(response) {
+                    alert("Integrations saved successfully!");
+                },
+                error: function(err) {
+                    console.error(err);
+                }
+            });
+        });
+    });
+</script>

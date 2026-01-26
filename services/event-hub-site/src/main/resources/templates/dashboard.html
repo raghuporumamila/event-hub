@@ -187,7 +187,7 @@
 		}
 		function showIntegrations() {
 			$('#contentArea').html("<font color='green'>Loading.......</font>");
-			$.get('/site/v1/integrations', function(data) {
+			$.get('/site/v1/manageIntegrations', function(data) {
 				  $('#contentArea').html(data);
 			});
 		}

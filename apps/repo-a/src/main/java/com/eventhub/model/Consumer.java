@@ -16,7 +16,6 @@ public class Consumer {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	private String userId;
 	private String email;
 	private String firstName;
 	private String lastName;
@@ -24,5 +23,10 @@ public class Consumer {
 	private String postalCode;
 	private String state;
 	private String country;
-	private String orgId;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "organization_id")
+	private Organization organization;
+	@ManyToOne
+	@JoinColumn(name = "workspace_id")
+	private Workspace workspace;
 }

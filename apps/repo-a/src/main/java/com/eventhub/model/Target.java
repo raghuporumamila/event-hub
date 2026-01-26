@@ -22,4 +22,5 @@ public class Target {
 	@ManyToOne
 	@JoinColumn(name = "org_id")
 	private Organization organization;
+	private String credentials;
 }

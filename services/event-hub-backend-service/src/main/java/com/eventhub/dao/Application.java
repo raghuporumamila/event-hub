@@ -10,9 +10,9 @@ import java.util.Collections;
 @EntityScan(basePackages = "com.eventhub.model")
 public class Application {
 	public static void main(String[] args) {
-        /*SpringApplication app = new SpringApplication(Application.class);
+        SpringApplication app = new SpringApplication(Application.class);
         app.setDefaultProperties(Collections.singletonMap("server.port", "8081"));
-        app.run(args);*/
-        SpringApplication.run(Application.class, args);
+        app.run(args);
+        //SpringApplication.run(Application.class, args);
     }
 }

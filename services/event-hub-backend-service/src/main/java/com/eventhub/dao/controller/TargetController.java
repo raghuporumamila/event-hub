@@ -4,6 +4,7 @@ import com.eventhub.dao.repository.alloydb.OrganizationRepository;
 import com.eventhub.dao.repository.alloydb.TargetRepository;
 import com.eventhub.dao.repository.alloydb.WorkspaceRepository;
 import com.eventhub.model.Organization;
+import com.eventhub.model.Source;
 import com.eventhub.model.Target;
 import com.eventhub.model.Workspace;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,11 @@ public class TargetController {
 
     @Autowired
     private WorkspaceRepository workspaceRepository;
+
+    @RequestMapping(value = "{targetId}", method=RequestMethod.GET)
+    public Target getTarget(@PathVariable Long targetId)  throws Exception {
+        return targetRepository.findById(targetId).get();
+    }
 
     @RequestMapping(method= RequestMethod.POST)
     public void saveTarget(@PathVariable Long orgId,

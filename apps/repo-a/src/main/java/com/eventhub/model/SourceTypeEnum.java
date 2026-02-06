@@ -1,6 +1,8 @@
 package com.eventhub.model;
 
-public enum SourceTypeEnum {
+import java.io.Serializable;
+
+public enum SourceTypeEnum implements Serializable {
     API,
     SALESFORCE
 }

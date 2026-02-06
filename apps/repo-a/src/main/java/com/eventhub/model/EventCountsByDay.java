@@ -1,6 +1,8 @@
 package com.eventhub.model;
 
-public class EventCountsByDay {
+import java.io.Serializable;
+
+public class EventCountsByDay implements Serializable {
 
 	private String dayName;
 	private Long count = new Long(0);

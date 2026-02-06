@@ -3,8 +3,10 @@ package com.eventhub.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
+import java.io.Serializable;
+
 @Data
-public class ValidateJsonData {
+public class ValidateJsonData implements Serializable {
     private String schema;
     private String payload;
 

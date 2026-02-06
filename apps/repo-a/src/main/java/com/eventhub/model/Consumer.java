@@ -6,13 +6,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.io.Serializable;
+
 @Entity
 @Getter // Only generate getters
 @Setter // Only generate setters
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "consumer", schema = "event")
-public class Consumer {
+public class Consumer implements Serializable {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;

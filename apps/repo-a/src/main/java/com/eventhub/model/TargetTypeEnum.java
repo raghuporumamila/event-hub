@@ -1,6 +1,8 @@
 package com.eventhub.model;
 
-public enum TargetTypeEnum {
+import java.io.Serializable;
+
+public enum TargetTypeEnum implements Serializable {
     BIGQUERY,
     API,
     JDBC

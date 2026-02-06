@@ -3,13 +3,15 @@ package com.eventhub.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serializable;
+
 @Entity
 @Getter // Only generate getters
 @Setter // Only generate setters
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "user", schema = "security")
-public class User {
+public class User implements Serializable {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;

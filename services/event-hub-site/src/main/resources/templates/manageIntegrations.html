@@ -24,7 +24,7 @@
                     </label>
                 </div>
                 <hr>
-                <button id="submitBtn" class="btn btn-primary mt-3">Save Integrations</button>
+                <button id="submitBtn" class="btn btn-primary mt-3">Apply</button>
             </div>
         </div>
     </div>
@@ -66,21 +66,25 @@
             $('.target-checkbox:checked').each(function() {
                 targetIds.push($(this).val());
             });
-
+            const selectedTargets = targetIds.map(cb => ({ id: parseInt(cb) })); // Wrap each ID in an object
             // Create the payload
             // We send a simple DTO to match your backend needs
             const payload = {
-                sourceId: selectedSourceId,
-                targetIds: targetIds
+                id: selectedSourceId,
+                targets: selectedTargets
             };
+            console.log(payload)
 
             $.ajax({
                 type: "POST",
-                url: "/api/integrations/save",
+                url: "/site/v1/saveIntegration",
                 contentType: "application/json",
                 data: JSON.stringify(payload),
                 success: function(response) {
-                    alert("Integrations saved successfully!");
+                    $('#contentArea').html("<font color='green'>Loading.......</font>");
+                    $.get('/site/v1/manageIntegrations', function(data) {
+                        $('#contentArea').html(data);
+                    });
                 },
                 error: function(err) {
                     console.error(err);

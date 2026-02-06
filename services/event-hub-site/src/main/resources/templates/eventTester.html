@@ -43,18 +43,27 @@ $.post("/site/v1/validateEventData",
     });
 }
 function publishEvent() {
-$.post("/publishEvent",
-    {
-      jsonData: $('#jsonData').val()
-    },
-    function(data,status){
-      if (status == 'success') {
-    	  $("#eventTesterStatus").html('<font color="green">Event is successfully processed' + '</font>')
-      }
-    }).fail(function(response) {
-    	  errorJSON = JSON.parse(response.responseText)
-    	  console.log(response.responseText)
-       	  $("#eventTesterStatus").html('<font color="red">Event has a issue in processing.</font>')
-    });
+	const payload = {
+		eventDefinition: {
+			id: $("#eventTesterDefinitionId").val()
+		},
+		// If jsonData is already a string, don't stringify it again
+		// If it's an object you want as a nested object, parse it first
+		payload: $("#jsonData").val()
+	};
+	console.log(payload)
+	$.ajax({
+		type: "POST",
+		url: "/site/v1/publishEvent",
+		contentType: "application/json",
+		data: JSON.stringify(payload),
+		success: function(response) {
+			$("#eventTesterStatus").html('<font color="green">Event is successfully processed' + '</font>')
+		},
+		error: function(err) {
+			console.log(err)
+			$("#eventTesterStatus").html('<font color="red">Event has a issue in processing.</font>')
+		}
+	});
 }
 </script>

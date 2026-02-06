@@ -1,5 +1,6 @@
 package com.eventhub.site;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -70,6 +71,14 @@ public class SiteController {
 				"/workspaces/" + workspaceId + "/sources/" + sourceId;
 		return restTemplate.exchange(url, HttpMethod.GET, null,
 				new ParameterizedTypeReference<Source>() {
+				}).getBody();
+	}
+
+	private Target getTaget(Long orgId, Long workspaceId, Long targetId) {
+		String url = apiEndPointUri.getDaoApiEndpoint() + "/organizations/" + orgId +
+				"/workspaces/" + workspaceId + "/targets/" + targetId;
+		return restTemplate.exchange(url, HttpMethod.GET, null,
+				new ParameterizedTypeReference<Target>() {
 				}).getBody();
 	}
 	@GetMapping(value = "/definitions")
@@ -314,21 +323,59 @@ public class SiteController {
 
 	@GetMapping(value = "/getIntegration")
 	@ResponseBody
-	public ResponseEntity<Integration> getIntegration(Model model, @ModelAttribute("user") User user, @RequestParam Long sourceId) {
+	public ResponseEntity<Source> getIntegration(Model model,
+													  @ModelAttribute("user") User user,
+													  @RequestParam Long sourceId) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 		String baseUrl = apiEndPointUri.getDaoApiEndpoint() +
 				"/organizations/" + user.getOrganization().getId() +
 				"/workspaces/" + user.getDefaultWorkspace().getId();
 
-		Integration integration = restTemplate.exchange(baseUrl + "/integrations?sourceId=" + sourceId, HttpMethod.GET, null,
-				new ParameterizedTypeReference<Integration>() {
+		Source integration = restTemplate.exchange(baseUrl + "/sources/" + sourceId ,
+				HttpMethod.GET,
+				null,
+				new ParameterizedTypeReference<Source>() {
 				}).getBody();
 
 		return ResponseEntity.ok(integration);
 	}
 
+	@PostMapping(value = "/saveIntegration")
+	@ResponseBody
+	public ResponseEntity<Void> saveIntegration(Model model, @ModelAttribute("user") User user,
+							   @RequestBody Source integration) {
+		Source existingSource = getSource(user.getOrganization().getId(), user.getDefaultWorkspace().getId(), integration.getId());
+		List<Target> nonExistingTargets = new ArrayList<>();
+		for (Target t1 : integration.getTargets()) {
+			boolean targetExists = false;
+			for (Target existingTarget: existingSource.getTargets()) {
+				if (t1.getId().longValue() == existingTarget.getId().longValue()) {
+					targetExists = true;
+					break;
+				}
+			}
+			if (!targetExists) {
+				nonExistingTargets.add(t1);
+			}
+		}
+		nonExistingTargets = nonExistingTargets.stream().map(target -> {
+			return getTaget(user.getOrganization().getId(), user.getDefaultWorkspace().getId(), target.getId());
+		}).toList();
+		
+		existingSource.getTargets().addAll(nonExistingTargets);
+		/*integration.setOrganization(user.getOrganization());
+		integration.setWorkspace(user.getDefaultWorkspace());*/
+		HttpEntity<Source> requestUpdate = new HttpEntity<>(existingSource, (HttpHeaders) null);
+		String url = apiEndPointUri.getDaoApiEndpoint() + "/organizations/" + user.getOrganization().getId() +
+				"/workspaces/" + user.getDefaultWorkspace().getId() + "/sources";
+		ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.POST, requestUpdate , Void.class );
 
+		if (!response.getStatusCode().equals(HttpStatus.OK)) {
+			throw new RuntimeException(response.getBody().toString());
+		}
+		return response;
+	}
 
 	@GetMapping(value = "/consumers")
 	public String consumers(@ModelAttribute("user") User user, Model model) {
@@ -482,14 +529,19 @@ public class SiteController {
 
 	@PostMapping(value = "/publishEvent")
 	@ResponseStatus(HttpStatus.OK)
-	public void publishEvent(@RequestParam(name="jsonData") String jsonData) {
+	public void publishEvent(@ModelAttribute("user") User user,
+							 @RequestBody Event event) {
+		event.setOrganization(new Organization(user.getOrganization().getId(), null, null,
+				null, null, null, null, null));
+		event.setWorkspace(new Workspace(user.getDefaultWorkspace().getId(), null, null));
 		HttpHeaders headers1 = new HttpHeaders();
 		headers1.setContentType(MediaType.APPLICATION_JSON);
-		HttpEntity<String> httpEntity = new HttpEntity<String>(jsonData, headers1);
-		ResponseEntity<String> response = restTemplate.postForEntity( apiEndPointUri.getPublisherApiEndpoint() + "/publish", httpEntity , String.class );
+		HttpEntity<Event> httpEntity = new HttpEntity<>(event, headers1);
+		ResponseEntity<Void> response = restTemplate.postForEntity( apiEndPointUri.getPublisherApiEndpoint() +
+						"/publish", httpEntity , Void.class );
 
 		if (!response.getStatusCode().equals(HttpStatus.OK)) {
-			throw new RuntimeException(response.getBody());
+			throw new RuntimeException(response.getBody().toString());
 		}
 	}
 

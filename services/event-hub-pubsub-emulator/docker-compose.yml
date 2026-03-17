@@ -1,0 +1,13 @@
+services:
+  pubsub:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+    ports:
+      - "8085:8085"
+    command: >
+      /bin/sh -c "
+      gcloud beta emulators pubsub start --host-port=0.0.0.0:8085 &
+      sleep 10;
+      curl -X PUT http://localhost:8085/v1/projects/local-project/topics/event-hub-topic;
+      curl -X PUT http://localhost:8085/v1/projects/local-project/subscriptions/event-hub-sub -H 'Content-Type: application/json' -d '{\"topic\":\"projects/local-project/topics/event-hub-topic\"}';
+      echo 'PubSub setup complete';
+      wait"

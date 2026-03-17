@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://eventhub.com/schemas/event.json",
+  "title": "Event",
+  "description": "A schema representing a single event entering the hub",
+  "type": "object",
+  "properties": {
+    "name": {
+      "description": "The name of the event (e.g., UserLogin)",
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 100
+    },
+    "sourceKey": {
+      "description": "The unique key identifying the source of the event",
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    },
+    "timestamp": {
+      "description": "ISO 8601 formatted timestamp",
+      "type": "string",
+      "format": "date-time"
+    },
+    "userId": {
+      "description": "The ID of the user who triggered the event",
+      "type": "string"
+    }
+  },
+  "required": ["name", "sourceKey", "timestamp"],
+  "additionalProperties": false
+}

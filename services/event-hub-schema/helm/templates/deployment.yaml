@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{.Values.nameOverride}}"
+spec:
+  selector:
+    matchLabels:
+      app: "{{.Values.nameOverride}}"
+      tier: validator
+      track: stable
+      namespace: "{{.Release.Namespace}}"
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: "{{.Values.nameOverride}}"
+        tier: validator
+        track: stable
+        namespace: "{{.Release.Namespace}}"
+    spec:
+      containers:
+        - name: "{{.Values.nameOverride}}"
+          image: "{{.Values.image.repository}}/{{ .Values.gcp_project }}/{{.Values.nameOverride}}:{{.Values.image.tag}}"
+          imagePullPolicy: "Always"
+          ports:
+            - name: http
+              containerPort: 8080

@@ -1,0 +1,69 @@
+<form>
+	<!-- 
+	<div class="form-group">
+		<label for="source">Source</label>
+		<select id="source" class="form-control">
+      		<option th:each="source : ${sources}" th:value="${source.id}" th:text="${source.name}"></option>
+    	</select>
+    </div>
+     -->
+     <div id="eventTesterStatus">
+     </div>
+     <br/><br/>
+    <div class="form-group">
+		<label for="eventTesterDefinitionId">Event</label>
+		<select id="eventTesterDefinitionId" class="form-control">
+      		<option th:each="definition : ${definitions}" th:value="${definition.id}" th:text="${definition.eventName}"></option>
+    	</select>
+    </div>
+	<div class="form-group">
+		<label for="jsonData">JSON payload</label>
+		<textarea cols="150" rows="20" class="form-control" id="jsonData"></textarea>
+	</div>
+	<div class="form-group">
+		<a href="javascript:validateData()" class="btn btn-primary">Validate</a> &nbsp;&nbsp;&nbsp;
+		<a href="javascript:publishEvent()" class="btn btn-primary">Publish</a>
+	</div>
+</form>
+<script>
+function validateData() {
+$.post("/site/v1/validateEventData",
+    {
+      eventId: $('#eventTesterDefinitionId').val(),
+      jsonData: $('#jsonData').val()
+    },
+    function(data,status){
+      if (status == 'success') {
+    	  $("#eventTesterStatus").html('<font color="green">Valid event' + '</font>')
+      }
+    }).fail(function(response) {
+    	  errorJSON = JSON.parse(response.responseText)
+    	  console.log(response.responseText)
+       	  $("#eventTesterStatus").html('<font color="red">Not a valid event </font>')
+    });
+}
+function publishEvent() {
+	const payload = {
+		eventDefinition: {
+			id: $("#eventTesterDefinitionId").val()
+		},
+		// If jsonData is already a string, don't stringify it again
+		// If it's an object you want as a nested object, parse it first
+		payload: $("#jsonData").val()
+	};
+	console.log(payload)
+	$.ajax({
+		type: "POST",
+		url: "/site/v1/publishEvent",
+		contentType: "application/json",
+		data: JSON.stringify(payload),
+		success: function(response) {
+			$("#eventTesterStatus").html('<font color="green">Event is successfully processed' + '</font>')
+		},
+		error: function(err) {
+			console.log(err)
+			$("#eventTesterStatus").html('<font color="red">Event has a issue in processing.</font>')
+		}
+	});
+}
+</script>

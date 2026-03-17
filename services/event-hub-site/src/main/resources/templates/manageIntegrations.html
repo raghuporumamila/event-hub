@@ -1,0 +1,95 @@
+<div class="container mt-5">
+    <h3>Setup Integrations</h3>
+    <div class="row">
+        <div class="col-md-4">
+            <label class="form-label"><strong>1. Select a Source</strong></label>
+            <div class="list-group" id="sourceList">
+                <button type="button"
+                        th:each="src : ${sources}"
+                        th:data-id="${src.id}"
+                        class="list-group-item list-group-item-action source-item">
+                    <span th:text="${src.name}">Source Name</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <label class="form-label"><strong>2. Select Multiple Targets</strong></label>
+            <div class="card p-3">
+                <div th:each="tgt : ${targets}" class="form-check">
+                    <input class="form-check-input target-checkbox" type="checkbox"
+                           th:value="${tgt.id}" th:id="'tgt' + ${tgt.id}">
+                    <label class="form-check-label" th:for="'tgt' + ${tgt.id}" th:text="${tgt.name}">
+                        Target Name
+                    </label>
+                </div>
+                <hr>
+                <button id="submitBtn" class="btn btn-primary mt-3">Apply</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function() {
+        let selectedSourceId = null;
+
+        // Handle Source Selection
+        $('.source-item').on('click', function() {
+            $('.source-item').removeClass('active');
+            $(this).addClass('active');
+            selectedSourceId = $(this).data('id');
+            //$('#contentArea').html("<font color='green'>Loading.......</font>");
+            $.get('/site/v1/getIntegration?sourceId=' + selectedSourceId, function(data) {
+                $('.target-checkbox').prop('checked', false);
+                console.log(data);
+                $.each(data.targets, function(index, target) {
+                    //alert(target.id);
+                    // Accessing the 'target' object inside your Integration POJO
+                    const targetId = target.id;
+
+                    // 3. Find the checkbox with that ID and check it
+                    $('#tgt' + targetId).prop('checked', true);
+                });
+
+            });
+        });
+
+        // Submit Logic
+        $('#submitBtn').on('click', function() {
+            if (!selectedSourceId) {
+                alert("Please select a source first!");
+                return;
+            }
+
+            // Collect all checked targets
+            const targetIds = [];
+            $('.target-checkbox:checked').each(function() {
+                targetIds.push($(this).val());
+            });
+            const selectedTargets = targetIds.map(cb => ({ id: parseInt(cb) })); // Wrap each ID in an object
+            // Create the payload
+            // We send a simple DTO to match your backend needs
+            const payload = {
+                id: selectedSourceId,
+                targets: selectedTargets
+            };
+            console.log(payload)
+
+            $.ajax({
+                type: "POST",
+                url: "/site/v1/saveIntegration",
+                contentType: "application/json",
+                data: JSON.stringify(payload),
+                success: function(response) {
+                    $('#contentArea').html("<font color='green'>Loading.......</font>");
+                    $.get('/site/v1/manageIntegrations', function(data) {
+                        $('#contentArea').html(data);
+                    });
+                },
+                error: function(err) {
+                    console.error(err);
+                }
+            });
+        });
+    });
+</script>

@@ -1,0 +1,50 @@
+
+<th:block th:include="~{fragments/manageCRUD :: headerfiles}">
+</th:block>
+
+<br />
+<br />
+<div class="card">
+	<div class="card-header"><h5>Create workspace</h5></div>
+	<div class="card-body">
+		<p class="card-text">Workspaces let your organization manages data
+			to specific environment and this can be useful if your organization
+			have more than one environment systems like DEV, TEST & PROD.</p>
+		<form>
+
+			<div class="form-row">
+				<div class="col">
+					<input type="text" class="form-control" id="workspaceName"
+						placeholder="Enter Workspace Name">
+				</div>
+				<div class="col">
+					<button type="button" class="btn btn-primary mb-2" onclick="createWorkspace()">Create</button>
+				</div>
+			</div>
+
+
+		</form>
+	</div>
+</div>
+<br/>
+<br/>
+<h5>Select Workspace to change</h5>
+<div class="list-group">
+  <a th:href="'javascript:changeWorkspace(\'' + ${workspace.id} + '\');'" class="list-group-item list-group-item-action" th:classappend="${user.defaultWorkspace == workspace.name} ? 'active' : ''"
+  		th:each="workspace : ${workspaces}" th:text="${user.defaultWorkspace == workspace.name} ? ${workspace.name} + ' (Currently selected workspace)' : ${workspace.name}"></a>
+</div>
+<form id="workspaceChangeForm" method="POST" action="/site/v1/changeWorkspace">
+	<input type="hidden" id="workspace" name="workspace"/>
+</form>
+<script>
+	function changeWorkspace(workspace) {
+		$('#workspace').val(workspace)
+		 $("#workspaceChangeForm").submit();
+	}
+	
+	function createWorkspace() {
+		$("#workspaceChangeForm").attr('action', '/site/v1/createWorkspace');
+		$('#workspace').val($('#workspaceName').val())
+		 $("#workspaceChangeForm").submit();
+	}
+</script>

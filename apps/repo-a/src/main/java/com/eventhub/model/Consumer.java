@@ -1,0 +1,34 @@
+package com.eventhub.model;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.io.Serializable;
+
+@Entity
+@Getter // Only generate getters
+@Setter // Only generate setters
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "consumer", schema = "event")
+public class Consumer implements Serializable {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
+	private String email;
+	private String firstName;
+	private String lastName;
+	private String city;
+	private String postalCode;
+	private String state;
+	private String country;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "organization_id")
+	private Organization organization;
+	@ManyToOne
+	@JoinColumn(name = "workspace_id")
+	private Workspace workspace;
+}

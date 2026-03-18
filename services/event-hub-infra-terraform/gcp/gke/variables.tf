@@ -24,7 +24,9 @@ variable "subnet_name" {
   type        = string
 }
 
-variable "state_bucket_name" {
-  description = "The name of the GCS bucket for Terraform state"
+variable "cicd_service_account_email" {
+  description = "The email of the CI/CD service account for cluster deployment access"
   type        = string
 }
+
+

@@ -3,5 +3,4 @@ region       = "us-central1"
 cluster_name = "prod-autopilot-cluster"
 vpc_name     = "main-gke-vpc"
 subnet_name  = "gke-nodes-subnet"
-
-state_bucket_name = "event-hub-terraform-prod"
+cicd_service_account_email = "github-cicd-sa@event-hub-317019.iam.gserviceaccount.com"

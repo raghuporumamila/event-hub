@@ -1,0 +1,141 @@
+name: GCP Event Hub Schema CI/CD
+
+on:
+  workflow_dispatch:
+    inputs:
+      ar_location:
+        description: Artifact Registry location (for example, us-central1)
+        required: true
+        default: us-central1
+        type: string
+      ar_repository:
+        description: Artifact Registry repository name
+        required: true
+        default: event-hub
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-event-hub-schema:
+    name: Build and push event-hub-schema image
+    runs-on: ubuntu-latest
+    environment: prod
+    env:
+      CICD_GITHUB_SA: ${{ vars.CICD_GITHUB_SA }}
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      WIF: ${{ vars.WIF }}
+      AR_LOCATION: ${{ github.event.inputs.ar_location }}
+      AR_REPOSITORY: ${{ github.event.inputs.ar_repository }}
+    outputs:
+      image_tag: ${{ steps.meta.outputs.image_tag }}
+      image_uri: ${{ steps.meta.outputs.image_uri }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required environment variables
+        run: |
+          missing=0
+          for v in CICD_GITHUB_SA GCP_PROJECT_ID WIF; do
+            if [ -z "${!v}" ]; then
+              echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
+              missing=1
+            fi
+          done
+
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Compute image tag
+        id: meta
+        run: |
+          IMAGE_TAG="${GITHUB_SHA::12}"
+          IMAGE_URI="${AR_LOCATION}-docker.pkg.dev/${GCP_PROJECT_ID}/${AR_REPOSITORY}/event-hub-schema:${IMAGE_TAG}"
+          echo "image_tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "image_uri=${IMAGE_URI}" >> "$GITHUB_OUTPUT"
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF }}
+          service_account: ${{ env.CICD_GITHUB_SA }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker auth for Artifact Registry
+        run: gcloud auth configure-docker ${AR_LOCATION}-docker.pkg.dev --quiet
+
+      - name: Build container image
+        run: |
+          docker build \
+            --build-arg APP_VERSION=1.0.0 \
+            --build-arg COMMIT_SHA=${GITHUB_SHA} \
+            -f services/event-hub-schema/Dockerfile \
+            -t ${{ steps.meta.outputs.image_uri }} \
+            services
+
+      - name: Push container image
+        run: docker push ${{ steps.meta.outputs.image_uri }}
+
+  deploy-event-hub-schema:
+    name: Deploy event-hub-schema to GKE prod
+    runs-on: ubuntu-latest
+    environment: prod
+    needs: build-event-hub-schema
+    env:
+      CICD_GITHUB_SA: ${{ vars.CICD_GITHUB_SA }}
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      WIF: ${{ vars.WIF }}
+      AR_LOCATION: ${{ github.event.inputs.ar_location }}
+      AR_REPOSITORY: ${{ github.event.inputs.ar_repository }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required environment variables
+        run: |
+          missing=0
+          for v in CICD_GITHUB_SA GCP_PROJECT_ID WIF; do
+            if [ -z "${!v}" ]; then
+              echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
+              missing=1
+            fi
+          done
+
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF }}
+          service_account: ${{ env.CICD_GITHUB_SA }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: prod-autopilot-cluster
+          location: us-central1
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Apply deployment manifest
+        run: kubectl apply -f services/event-hub-schema/deployment.yml
+
+      - name: Update image and verify rollout
+        run: |
+          kubectl set image deployment/event-hub-schema \
+            event-hub-schema=${{ needs.build-event-hub-schema.outputs.image_uri }}
+          kubectl rollout status deployment/event-hub-schema --timeout=180s

@@ -74,6 +74,22 @@ resource "google_project_iam_member" "terraform_service_usage_consumer" {
   depends_on = [google_project_service.cloudresourcemanager]
 }
 
+# Allow Terraform SA to create/manage VPC networks and subnets.
+resource "google_project_iam_member" "terraform_compute_network_admin" {
+  project = var.project_id
+  role    = "roles/compute.networkAdmin"
+  member  = "serviceAccount:${var.terraform_service_account_id}"
+  depends_on = [google_project_service.cloudresourcemanager]
+}
+
+# Allow Terraform SA to create and manage service accounts.
+resource "google_project_iam_member" "terraform_service_account_admin" {
+  project = var.project_id
+  role    = "roles/iam.serviceAccountAdmin"
+  member  = "serviceAccount:${var.terraform_service_account_id}"
+  depends_on = [google_project_service.cloudresourcemanager]
+}
+
 # Ensure Terraform SA has object permissions on the exact remote state bucket.
 resource "google_storage_bucket_iam_member" "terraform_state_bucket_object_admin" {
   bucket = var.terraform_state_bucket

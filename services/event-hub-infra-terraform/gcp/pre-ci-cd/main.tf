@@ -50,59 +50,77 @@ resource "google_project_service" "cloudresourcemanager" {
   depends_on         = [google_project_service.serviceusage]
 }
 
+resource "google_project_service" "artifactregistry" {
+  project            = var.project_id
+  service            = "artifactregistry.googleapis.com"
+  disable_on_destroy = false
+  depends_on         = [google_project_service.serviceusage]
+}
+
+# Artifact Registry repository for Event Hub container images.
+resource "google_artifact_registry_repository" "event_hub" {
+  project       = var.project_id
+  location      = var.region
+  repository_id = "event-hub"
+  description   = "Artifact Registry repository for Event Hub services"
+  format        = "DOCKER"
+
+  depends_on = [google_project_service.artifactregistry]
+}
+
 # Allow Terraform service account to read and write remote state objects in GCS.
 resource "google_project_iam_member" "terraform_storage_object_admin" {
-  project = var.project_id
-  role    = "roles/storage.objectAdmin"
-  member  = "serviceAccount:${var.terraform_service_account_id}"
+  project    = var.project_id
+  role       = "roles/storage.objectAdmin"
+  member     = "serviceAccount:${var.terraform_service_account_id}"
   depends_on = [google_project_service.cloudresourcemanager]
 }
 
 # Allow Terraform SA to list/enable/disable Google APIs via google_project_service.
 resource "google_project_iam_member" "terraform_service_usage_admin" {
-  project = var.project_id
-  role    = "roles/serviceusage.serviceUsageAdmin"
-  member  = "serviceAccount:${var.terraform_service_account_id}"
+  project    = var.project_id
+  role       = "roles/serviceusage.serviceUsageAdmin"
+  member     = "serviceAccount:${var.terraform_service_account_id}"
   depends_on = [google_project_service.cloudresourcemanager]
 }
 
 # Required for APIs that enforce consumer project usage checks.
 resource "google_project_iam_member" "terraform_service_usage_consumer" {
-  project = var.project_id
-  role    = "roles/serviceusage.serviceUsageConsumer"
-  member  = "serviceAccount:${var.terraform_service_account_id}"
+  project    = var.project_id
+  role       = "roles/serviceusage.serviceUsageConsumer"
+  member     = "serviceAccount:${var.terraform_service_account_id}"
   depends_on = [google_project_service.cloudresourcemanager]
 }
 
 # Allow Terraform SA to grant/revoke project-level IAM bindings (e.g. pubsub.publisher, etc.).
 resource "google_project_iam_member" "terraform_project_iam_admin" {
-  project = var.project_id
-  role    = "roles/resourcemanager.projectIamAdmin"
-  member  = "serviceAccount:${var.terraform_service_account_id}"
+  project    = var.project_id
+  role       = "roles/resourcemanager.projectIamAdmin"
+  member     = "serviceAccount:${var.terraform_service_account_id}"
   depends_on = [google_project_service.cloudresourcemanager]
 }
 
 # Allow Terraform SA to create/manage VPC networks and subnets.
 resource "google_project_iam_member" "terraform_compute_network_admin" {
-  project = var.project_id
-  role    = "roles/compute.networkAdmin"
-  member  = "serviceAccount:${var.terraform_service_account_id}"
+  project    = var.project_id
+  role       = "roles/compute.networkAdmin"
+  member     = "serviceAccount:${var.terraform_service_account_id}"
   depends_on = [google_project_service.cloudresourcemanager]
 }
 
 # Allow Terraform SA to create and manage GKE clusters.
 resource "google_project_iam_member" "terraform_container_cluster_admin" {
-  project = var.project_id
-  role    = "roles/container.clusterAdmin"
-  member  = "serviceAccount:${var.terraform_service_account_id}"
+  project    = var.project_id
+  role       = "roles/container.clusterAdmin"
+  member     = "serviceAccount:${var.terraform_service_account_id}"
   depends_on = [google_project_service.cloudresourcemanager]
 }
 
 # Allow Terraform SA to create and manage service accounts.
 resource "google_project_iam_member" "terraform_service_account_admin" {
-  project = var.project_id
-  role    = "roles/iam.serviceAccountAdmin"
-  member  = "serviceAccount:${var.terraform_service_account_id}"
+  project    = var.project_id
+  role       = "roles/iam.serviceAccountAdmin"
+  member     = "serviceAccount:${var.terraform_service_account_id}"
   depends_on = [google_project_service.cloudresourcemanager]
 }
 
@@ -131,22 +149,30 @@ resource "google_service_account" "cicd_sa" {
 resource "google_project_iam_member" "cicd_artifact_registry_reader" {
   project = var.project_id
   role    = "roles/artifactregistry.reader"
-  member  = "serviceAccount:${google_service_account.cicd_sa.email}"
-  depends_on = [google_project_service.cloudresourcemanager]
+  member  = "serviceAccount:github-cicd-sa@event-hub-317019.iam.gserviceaccount.com"
+  depends_on = [
+    google_project_service.cloudresourcemanager,
+    google_service_account.cicd_sa,
+    google_artifact_registry_repository.event_hub
+  ]
 }
 
 # Grant Artifact Registry Writer role
 resource "google_project_iam_member" "cicd_artifact_registry_writer" {
   project = var.project_id
   role    = "roles/artifactregistry.writer"
-  member  = "serviceAccount:${google_service_account.cicd_sa.email}"
-  depends_on = [google_project_service.cloudresourcemanager]
+  member  = "serviceAccount:github-cicd-sa@event-hub-317019.iam.gserviceaccount.com"
+  depends_on = [
+    google_project_service.cloudresourcemanager,
+    google_service_account.cicd_sa,
+    google_artifact_registry_repository.event_hub
+  ]
 }
 
 # Grant GKE Developer role for deployments
 resource "google_project_iam_member" "cicd_gke_developer" {
-  project = var.project_id
-  role    = "roles/container.developer"
-  member  = "serviceAccount:${google_service_account.cicd_sa.email}"
+  project    = var.project_id
+  role       = "roles/container.developer"
+  member     = "serviceAccount:${google_service_account.cicd_sa.email}"
   depends_on = [google_project_service.cloudresourcemanager]
 }

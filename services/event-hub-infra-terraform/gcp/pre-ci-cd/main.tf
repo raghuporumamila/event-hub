@@ -82,6 +82,14 @@ resource "google_project_iam_member" "terraform_compute_network_admin" {
   depends_on = [google_project_service.cloudresourcemanager]
 }
 
+# Allow Terraform SA to create and manage GKE clusters.
+resource "google_project_iam_member" "terraform_container_cluster_admin" {
+  project = var.project_id
+  role    = "roles/container.clusterAdmin"
+  member  = "serviceAccount:${var.terraform_service_account_id}"
+  depends_on = [google_project_service.cloudresourcemanager]
+}
+
 # Allow Terraform SA to create and manage service accounts.
 resource "google_project_iam_member" "terraform_service_account_admin" {
   project = var.project_id

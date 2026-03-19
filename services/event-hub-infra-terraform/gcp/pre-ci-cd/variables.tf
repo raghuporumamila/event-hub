@@ -19,6 +19,11 @@ variable "terraform_service_account_id" {
   type        = string
 }
 
+variable "project_number" {
+  description = "The GCP project number (used to reference default compute SA)"
+  type        = string
+}
+
 variable "terraform_state_bucket" {
   description = "Terraform remote state GCS bucket name"
   type        = string

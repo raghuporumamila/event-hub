@@ -106,6 +106,13 @@ resource "google_project_iam_member" "terraform_service_account_admin" {
   depends_on = [google_project_service.cloudresourcemanager]
 }
 
+# Allow Terraform SA to use the default GCE compute SA as a node identity when creating GKE node pools.
+resource "google_service_account_iam_member" "terraform_use_compute_default_sa" {
+  service_account_id = "projects/${var.project_id}/serviceAccounts/${var.project_number}-compute@developer.gserviceaccount.com"
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${var.terraform_service_account_id}"
+}
+
 # Ensure Terraform SA has object permissions on the exact remote state bucket.
 resource "google_storage_bucket_iam_member" "terraform_state_bucket_object_admin" {
   bucket = var.terraform_state_bucket

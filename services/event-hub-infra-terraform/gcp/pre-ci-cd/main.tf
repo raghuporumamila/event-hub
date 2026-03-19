@@ -74,6 +74,14 @@ resource "google_project_iam_member" "terraform_service_usage_consumer" {
   depends_on = [google_project_service.cloudresourcemanager]
 }
 
+# Allow Terraform SA to grant/revoke project-level IAM bindings (e.g. pubsub.publisher, etc.).
+resource "google_project_iam_member" "terraform_project_iam_admin" {
+  project = var.project_id
+  role    = "roles/resourcemanager.projectIamAdmin"
+  member  = "serviceAccount:${var.terraform_service_account_id}"
+  depends_on = [google_project_service.cloudresourcemanager]
+}
+
 # Allow Terraform SA to create/manage VPC networks and subnets.
 resource "google_project_iam_member" "terraform_compute_network_admin" {
   project = var.project_id

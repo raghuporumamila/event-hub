@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: event-hub-schema
-          image: gcr.io/event-hub-317019/event-hub-schema:latest
+          image: us-central1-docker.pkg.dev/event-hub-317019/event-hub/event-hub-schema:latest
           imagePullPolicy: Always
           ports:
             - name: http

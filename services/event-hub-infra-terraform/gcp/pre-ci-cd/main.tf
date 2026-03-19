@@ -50,6 +50,13 @@ resource "google_project_iam_member" "terraform_service_usage_admin" {
   member  = "serviceAccount:${var.terraform_service_account_id}"
 }
 
+# Required for APIs that enforce consumer project usage checks.
+resource "google_project_iam_member" "terraform_service_usage_consumer" {
+  project = var.project_id
+  role    = "roles/serviceusage.serviceUsageConsumer"
+  member  = "serviceAccount:${var.terraform_service_account_id}"
+}
+
 # Ensure Terraform SA has object permissions on the exact remote state bucket.
 resource "google_storage_bucket_iam_member" "terraform_state_bucket_object_admin" {
   bucket = var.terraform_state_bucket

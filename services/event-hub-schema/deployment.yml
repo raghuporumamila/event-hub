@@ -17,7 +17,6 @@ spec:
         app: event-hub-schema
         tier: validator
     spec:
-      serviceAccountName: event-hub-schema-app
       containers:
         - name: event-hub-schema
           image: gcr.io/event-hub-317019/event-hub-schema:latest
@@ -26,14 +25,12 @@ spec:
             - name: http
               containerPort: 8080
           readinessProbe:
-            httpGet:
-              path: /
+            tcpSocket:
               port: http
             initialDelaySeconds: 10
             periodSeconds: 10
           livenessProbe:
-            httpGet:
-              path: /
+            tcpSocket:
               port: http
             initialDelaySeconds: 30
             periodSeconds: 20

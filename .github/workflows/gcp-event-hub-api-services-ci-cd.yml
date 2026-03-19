@@ -134,8 +134,24 @@ jobs:
       - name: Apply deployment manifest
         run: kubectl apply -f services/event-hub-schema/deployment.yml
 
+      - name: Ensure service account exists
+        run: |
+          kubectl get serviceaccount event-hub-schema-app >/dev/null 2>&1 || \
+            kubectl create serviceaccount event-hub-schema-app
+
       - name: Update image and verify rollout
         run: |
+          set -e
           kubectl set image deployment/event-hub-schema \
             event-hub-schema=${{ needs.build-event-hub-schema.outputs.image_uri }}
-          kubectl rollout status deployment/event-hub-schema --timeout=180s
+          if ! kubectl rollout status deployment/event-hub-schema --timeout=420s; then
+            echo "Deployment rollout failed. Collecting diagnostics..."
+            kubectl get deployment event-hub-schema -o wide || true
+            kubectl get rs -l app=event-hub-schema -o wide || true
+            kubectl get pods -l app=event-hub-schema -o wide || true
+            kubectl describe deployment event-hub-schema || true
+            kubectl describe pods -l app=event-hub-schema || true
+            kubectl logs -l app=event-hub-schema --all-containers --tail=200 || true
+            kubectl get events --sort-by=.metadata.creationTimestamp | tail -n 100 || true
+            exit 1
+          fi

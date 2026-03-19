@@ -1,6 +1,6 @@
 terraform {
   backend "gcs" {
-    bucket  = "event-hub-terraform-prod"
-    prefix  = "terraform/state/pre-ci-cd"
+    bucket = "event-hub-terraform-prod"
+    prefix = "terraform/state/pre-ci-cd"
   }
 }

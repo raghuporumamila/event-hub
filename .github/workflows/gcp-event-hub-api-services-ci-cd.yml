@@ -13,6 +13,11 @@ on:
         required: true
         default: event-hub
         type: string
+      k8s_namespace:
+        description: Kubernetes namespace for deployment
+        required: true
+        default: prod
+        type: string
 
 permissions:
   contents: read
@@ -29,6 +34,7 @@ jobs:
       WIF: ${{ vars.WIF }}
       AR_LOCATION: ${{ github.event.inputs.ar_location }}
       AR_REPOSITORY: ${{ github.event.inputs.ar_repository }}
+      K8S_NAMESPACE: ${{ github.event.inputs.k8s_namespace }}
     outputs:
       image_tag: ${{ steps.meta.outputs.image_tag }}
       image_uri: ${{ steps.meta.outputs.image_uri }}
@@ -137,27 +143,41 @@ jobs:
           location: us-central1
           project_id: ${{ env.GCP_PROJECT_ID }}
 
+      - name: Show kubectl context
+        run: |
+          echo "Current context: $(kubectl config current-context)"
+          echo "Namespace: ${K8S_NAMESPACE}"
+          kubectl cluster-info
+
+      - name: Ensure namespace exists
+        run: kubectl get namespace ${K8S_NAMESPACE} >/dev/null 2>&1 || kubectl create namespace ${K8S_NAMESPACE}
+
       - name: Apply deployment manifest
-        run: kubectl apply -f services/event-hub-schema/deployment.yml
+        run: kubectl apply -n ${K8S_NAMESPACE} -f services/event-hub-schema/deployment.yml
 
       - name: Ensure service account exists
         run: |
-          kubectl get serviceaccount event-hub-schema-app >/dev/null 2>&1 || \
-            kubectl create serviceaccount event-hub-schema-app
+          kubectl get serviceaccount event-hub-schema-app -n ${K8S_NAMESPACE} >/dev/null 2>&1 || \
+            kubectl create serviceaccount event-hub-schema-app -n ${K8S_NAMESPACE}
 
       - name: Update image and verify rollout
         run: |
           set -e
-          kubectl set image deployment/event-hub-schema \
+          kubectl set image deployment/event-hub-schema -n ${K8S_NAMESPACE} \
             event-hub-schema=${{ needs.build-event-hub-schema.outputs.image_uri }}
-          if ! kubectl rollout status deployment/event-hub-schema --timeout=420s; then
+          if ! kubectl rollout status deployment/event-hub-schema -n ${K8S_NAMESPACE} --timeout=420s; then
             echo "Deployment rollout failed. Collecting diagnostics..."
-            kubectl get deployment event-hub-schema -o wide || true
-            kubectl get rs -l app=event-hub-schema -o wide || true
-            kubectl get pods -l app=event-hub-schema -o wide || true
-            kubectl describe deployment event-hub-schema || true
-            kubectl describe pods -l app=event-hub-schema || true
-            kubectl logs -l app=event-hub-schema --all-containers --tail=200 || true
-            kubectl get events --sort-by=.metadata.creationTimestamp | tail -n 100 || true
+            kubectl get deployment event-hub-schema -n ${K8S_NAMESPACE} -o wide || true
+            kubectl get rs -n ${K8S_NAMESPACE} -l app=event-hub-schema -o wide || true
+            kubectl get pods -n ${K8S_NAMESPACE} -l app=event-hub-schema -o wide || true
+            kubectl describe deployment event-hub-schema -n ${K8S_NAMESPACE} || true
+            kubectl describe pods -n ${K8S_NAMESPACE} -l app=event-hub-schema || true
+            kubectl logs -n ${K8S_NAMESPACE} -l app=event-hub-schema --all-containers --tail=200 || true
+            kubectl get events -n ${K8S_NAMESPACE} --sort-by=.metadata.creationTimestamp | tail -n 100 || true
             exit 1
           fi
+
+      - name: Show deployed workload
+        run: |
+          kubectl get deployment event-hub-schema -n ${K8S_NAMESPACE} -o wide
+          kubectl get pods -n ${K8S_NAMESPACE} -l app=event-hub-schema -o wide

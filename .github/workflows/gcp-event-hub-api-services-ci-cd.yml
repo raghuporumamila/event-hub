@@ -107,6 +107,7 @@ jobs:
       WIF: ${{ vars.WIF }}
       AR_LOCATION: ${{ github.event.inputs.ar_location }}
       AR_REPOSITORY: ${{ github.event.inputs.ar_repository }}
+      K8S_NAMESPACE: ${{ github.event.inputs.k8s_namespace }}
 
     steps:
       - name: Checkout
@@ -115,7 +116,7 @@ jobs:
       - name: Validate required environment variables
         run: |
           missing=0
-          for v in CICD_GITHUB_SA GCP_PROJECT_ID WIF; do
+          for v in CICD_GITHUB_SA GCP_PROJECT_ID WIF K8S_NAMESPACE; do
             if [ -z "${!v}" ]; then
               echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
               missing=1

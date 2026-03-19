@@ -18,3 +18,9 @@ variable "terraform_service_account_id" {
   description = "The existing Terraform service account email for Workload Identity"
   type        = string
 }
+
+variable "terraform_state_bucket" {
+  description = "Terraform remote state GCS bucket name"
+  type        = string
+  default     = "event-hub-terraform-prod"
+}

@@ -36,6 +36,27 @@ resource "google_service_account_iam_member" "terraform_wif_user" {
   member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/${var.github_repository}"
 }
 
+# Allow Terraform service account to read and write remote state objects in GCS.
+resource "google_project_iam_member" "terraform_storage_object_admin" {
+  project = var.project_id
+  role    = "roles/storage.objectAdmin"
+  member  = "serviceAccount:${var.terraform_service_account_id}"
+}
+
+# Allow Terraform SA to list/enable/disable Google APIs via google_project_service.
+resource "google_project_iam_member" "terraform_service_usage_admin" {
+  project = var.project_id
+  role    = "roles/serviceusage.serviceUsageAdmin"
+  member  = "serviceAccount:${var.terraform_service_account_id}"
+}
+
+# Ensure Terraform SA has object permissions on the exact remote state bucket.
+resource "google_storage_bucket_iam_member" "terraform_state_bucket_object_admin" {
+  bucket = var.terraform_state_bucket
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${var.terraform_service_account_id}"
+}
+
 # CI/CD Service Account
 resource "google_service_account" "cicd_sa" {
   account_id   = "github-cicd-sa"

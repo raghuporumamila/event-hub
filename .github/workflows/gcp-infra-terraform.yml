@@ -159,6 +159,15 @@ jobs:
       - name: Terraform init
         run: terraform init -input=false
 
+      - name: Remove legacy service resources from state
+        run: |
+          for r in google_project_service.compute google_project_service.container google_project_service.storage; do
+            if terraform state list | grep -qx "$r"; then
+              echo "Removing legacy state resource: $r"
+              terraform state rm "$r"
+            fi
+          done
+
       - name: Terraform validate
         run: terraform validate
 

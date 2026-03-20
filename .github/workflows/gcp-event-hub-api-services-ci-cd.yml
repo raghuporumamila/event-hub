@@ -19,7 +19,7 @@ on:
         default: prod
         type: string
       deploy_target:
-        description: Which service(s) to deploy (schema, backend, site, or all)
+        description: Which service(s) to deploy (schema, backend, site, db, or all)
         required: true
         default: all
         type: choice
@@ -28,6 +28,7 @@ on:
           - schema
           - backend
           - site
+          - db
 
 permissions:
   contents: read
@@ -516,3 +517,83 @@ jobs:
         run: |
           kubectl get deployment event-hub-site -n ${K8S_NAMESPACE} -o wide
           kubectl get pods -n ${K8S_NAMESPACE} -l app=event-hub-site -o wide
+
+  deploy-event-hub-db-server:
+    name: Deploy event-hub-db-server to GKE prod
+    runs-on: ubuntu-latest
+    environment: prod
+    if: ${{ github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == 'db' }}
+    env:
+      CICD_GITHUB_SA: ${{ vars.CICD_GITHUB_SA }}
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      WIF: ${{ vars.WIF }}
+      AR_LOCATION: ${{ github.event.inputs.ar_location }}
+      AR_REPOSITORY: ${{ github.event.inputs.ar_repository }}
+      K8S_NAMESPACE: ${{ github.event.inputs.k8s_namespace }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required environment variables
+        run: |
+          missing=0
+          for v in CICD_GITHUB_SA GCP_PROJECT_ID WIF K8S_NAMESPACE; do
+            if [ -z "${!v}" ]; then
+              echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
+              missing=1
+            fi
+          done
+
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF }}
+          service_account: ${{ env.CICD_GITHUB_SA }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: prod-autopilot-cluster
+          location: us-central1
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Show kubectl context
+        run: |
+          echo "Current context: $(kubectl config current-context)"
+          echo "Namespace: ${K8S_NAMESPACE}"
+          kubectl cluster-info
+
+      - name: Ensure namespace exists
+        run: kubectl get namespace ${K8S_NAMESPACE} >/dev/null 2>&1 || kubectl create namespace ${K8S_NAMESPACE}
+
+      - name: Apply DB manifest
+        run: kubectl apply -n ${K8S_NAMESPACE} -f services/event-hub-db-server/deployment.yml
+
+      - name: Verify StatefulSet rollout
+        run: |
+          set -e
+          if ! kubectl rollout status statefulset/alloydb -n ${K8S_NAMESPACE} --timeout=600s; then
+            echo "StatefulSet rollout failed. Collecting diagnostics..."
+            kubectl get statefulset alloydb -n ${K8S_NAMESPACE} -o wide || true
+            kubectl get pods -n ${K8S_NAMESPACE} -l app=alloydb -o wide || true
+            kubectl describe statefulset alloydb -n ${K8S_NAMESPACE} || true
+            kubectl describe pods -n ${K8S_NAMESPACE} -l app=alloydb || true
+            kubectl logs -n ${K8S_NAMESPACE} -l app=alloydb --all-containers --tail=200 || true
+            kubectl get events -n ${K8S_NAMESPACE} --sort-by=.metadata.creationTimestamp | tail -n 100 || true
+            exit 1
+          fi
+
+      - name: Show deployed DB workload
+        run: |
+          kubectl get statefulset alloydb -n ${K8S_NAMESPACE} -o wide
+          kubectl get pods -n ${K8S_NAMESPACE} -l app=alloydb -o wide
+          kubectl get svc -n ${K8S_NAMESPACE} -l app=alloydb -o wide

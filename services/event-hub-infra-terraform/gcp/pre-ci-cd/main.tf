@@ -1,13 +1,13 @@
 # The Workload Identity Pool
 resource "google_iam_workload_identity_pool" "github_pool" {
-  workload_identity_pool_id = "github-actions-pool-v2"
+  workload_identity_pool_id = "github-actions-pool-v3"
   display_name              = "GitHub Actions Pool"
 }
 
 # The OIDC Provider for GitHub
 resource "google_iam_workload_identity_pool_provider" "github_provider" {
   workload_identity_pool_id          = google_iam_workload_identity_pool.github_pool.workload_identity_pool_id
-  workload_identity_pool_provider_id = "github-provider-v2"
+  workload_identity_pool_provider_id = "github-provider-v3"
 
   attribute_mapping = {
     "google.subject"       = "assertion.sub"

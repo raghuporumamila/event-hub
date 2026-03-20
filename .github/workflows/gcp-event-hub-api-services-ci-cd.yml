@@ -1,4 +1,4 @@
-name: GCP Event Hub Schema CI/CD
+name: GCP Event Hub API Services CI/CD
 
 on:
   workflow_dispatch:
@@ -18,6 +18,16 @@ on:
         required: true
         default: prod
         type: string
+      deploy_target:
+        description: Which service(s) to deploy (schema, backend, site, or all)
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - schema
+          - backend
+          - site
 
 permissions:
   contents: read
@@ -28,6 +38,7 @@ jobs:
     name: Build and push event-hub-schema image
     runs-on: ubuntu-latest
     environment: prod
+    if: ${{ github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == 'schema' }}
     env:
       CICD_GITHUB_SA: ${{ vars.CICD_GITHUB_SA }}
       GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
@@ -101,6 +112,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: prod
     needs: build-event-hub-schema
+    if: ${{ github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == 'schema' }}
     env:
       CICD_GITHUB_SA: ${{ vars.CICD_GITHUB_SA }}
       GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
@@ -182,3 +194,325 @@ jobs:
         run: |
           kubectl get deployment event-hub-schema -n ${K8S_NAMESPACE} -o wide
           kubectl get pods -n ${K8S_NAMESPACE} -l app=event-hub-schema -o wide
+
+  build-event-hub-backend-service:
+    name: Build and push event-hub-backend-service image
+    runs-on: ubuntu-latest
+    environment: prod
+    if: ${{ github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == 'backend' }}
+    env:
+      CICD_GITHUB_SA: ${{ vars.CICD_GITHUB_SA }}
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      WIF: ${{ vars.WIF }}
+      AR_LOCATION: ${{ github.event.inputs.ar_location }}
+      AR_REPOSITORY: ${{ github.event.inputs.ar_repository }}
+      K8S_NAMESPACE: ${{ github.event.inputs.k8s_namespace }}
+    outputs:
+      image_tag: ${{ steps.meta.outputs.image_tag }}
+      image_uri: ${{ steps.meta.outputs.image_uri }}
+      image_latest_uri: ${{ steps.meta.outputs.image_latest_uri }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required environment variables
+        run: |
+          missing=0
+          for v in CICD_GITHUB_SA GCP_PROJECT_ID WIF; do
+            if [ -z "${!v}" ]; then
+              echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
+              missing=1
+            fi
+          done
+
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Compute image tag
+        id: meta
+        run: |
+          IMAGE_TAG="${GITHUB_SHA::12}"
+          IMAGE_URI="${AR_LOCATION}-docker.pkg.dev/${GCP_PROJECT_ID}/${AR_REPOSITORY}/event-hub-backend-service:${IMAGE_TAG}"
+          IMAGE_LATEST_URI="${AR_LOCATION}-docker.pkg.dev/${GCP_PROJECT_ID}/${AR_REPOSITORY}/event-hub-backend-service:latest"
+          echo "image_tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "image_uri=${IMAGE_URI}" >> "$GITHUB_OUTPUT"
+          echo "image_latest_uri=${IMAGE_LATEST_URI}" >> "$GITHUB_OUTPUT"
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF }}
+          service_account: ${{ env.CICD_GITHUB_SA }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker auth for Artifact Registry
+        run: gcloud auth configure-docker ${AR_LOCATION}-docker.pkg.dev --quiet
+
+      - name: Build container image
+        run: |
+          docker build \
+            --build-arg APP_VERSION=1.0.0 \
+            --build-arg COMMIT_SHA=${GITHUB_SHA} \
+            -f services/event-hub-backend-service/Dockerfile \
+            -t ${{ steps.meta.outputs.image_uri }} \
+            services
+          docker tag ${{ steps.meta.outputs.image_uri }} ${{ steps.meta.outputs.image_latest_uri }}
+
+      - name: Push container image
+        run: |
+          docker push ${{ steps.meta.outputs.image_uri }}
+          docker push ${{ steps.meta.outputs.image_latest_uri }}
+
+  deploy-event-hub-backend-service:
+    name: Deploy event-hub-backend-service to GKE prod
+    runs-on: ubuntu-latest
+    environment: prod
+    needs: build-event-hub-backend-service
+    if: ${{ github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == 'backend' }}
+    env:
+      CICD_GITHUB_SA: ${{ vars.CICD_GITHUB_SA }}
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      WIF: ${{ vars.WIF }}
+      AR_LOCATION: ${{ github.event.inputs.ar_location }}
+      AR_REPOSITORY: ${{ github.event.inputs.ar_repository }}
+      K8S_NAMESPACE: ${{ github.event.inputs.k8s_namespace }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required environment variables
+        run: |
+          missing=0
+          for v in CICD_GITHUB_SA GCP_PROJECT_ID WIF K8S_NAMESPACE; do
+            if [ -z "${!v}" ]; then
+              echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
+              missing=1
+            fi
+          done
+
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF }}
+          service_account: ${{ env.CICD_GITHUB_SA }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: prod-autopilot-cluster
+          location: us-central1
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Show kubectl context
+        run: |
+          echo "Current context: $(kubectl config current-context)"
+          echo "Namespace: ${K8S_NAMESPACE}"
+          kubectl cluster-info
+
+      - name: Ensure namespace exists
+        run: kubectl get namespace ${K8S_NAMESPACE} >/dev/null 2>&1 || kubectl create namespace ${K8S_NAMESPACE}
+
+      - name: Apply deployment manifest
+        run: kubectl apply -n ${K8S_NAMESPACE} -f services/event-hub-backend-service/deployment.yml
+
+      - name: Ensure service account exists
+        run: |
+          kubectl get serviceaccount event-hub-backend-service-app -n ${K8S_NAMESPACE} >/dev/null 2>&1 || \
+            kubectl create serviceaccount event-hub-backend-service-app -n ${K8S_NAMESPACE}
+
+      - name: Update image and verify rollout
+        run: |
+          set -e
+          kubectl set image deployment/event-hub-backend-service -n ${K8S_NAMESPACE} \
+            event-hub-backend-service=${{ needs.build-event-hub-backend-service.outputs.image_uri }}
+          if ! kubectl rollout status deployment/event-hub-backend-service -n ${K8S_NAMESPACE} --timeout=420s; then
+            echo "Deployment rollout failed. Collecting diagnostics..."
+            kubectl get deployment event-hub-backend-service -n ${K8S_NAMESPACE} -o wide || true
+            kubectl get rs -n ${K8S_NAMESPACE} -l app=event-hub-backend-service -o wide || true
+            kubectl get pods -n ${K8S_NAMESPACE} -l app=event-hub-backend-service -o wide || true
+            kubectl describe deployment event-hub-backend-service -n ${K8S_NAMESPACE} || true
+            kubectl describe pods -n ${K8S_NAMESPACE} -l app=event-hub-backend-service || true
+            kubectl logs -n ${K8S_NAMESPACE} -l app=event-hub-backend-service --all-containers --tail=200 || true
+            kubectl get events -n ${K8S_NAMESPACE} --sort-by=.metadata.creationTimestamp | tail -n 100 || true
+            exit 1
+          fi
+
+      - name: Show deployed workload
+        run: |
+          kubectl get deployment event-hub-backend-service -n ${K8S_NAMESPACE} -o wide
+          kubectl get pods -n ${K8S_NAMESPACE} -l app=event-hub-backend-service -o wide
+
+  build-event-hub-site:
+    name: Build and push event-hub-site image
+    runs-on: ubuntu-latest
+    environment: prod
+    if: ${{ github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == 'site' }}
+    env:
+      CICD_GITHUB_SA: ${{ vars.CICD_GITHUB_SA }}
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      WIF: ${{ vars.WIF }}
+      AR_LOCATION: ${{ github.event.inputs.ar_location }}
+      AR_REPOSITORY: ${{ github.event.inputs.ar_repository }}
+      K8S_NAMESPACE: ${{ github.event.inputs.k8s_namespace }}
+    outputs:
+      image_tag: ${{ steps.meta.outputs.image_tag }}
+      image_uri: ${{ steps.meta.outputs.image_uri }}
+      image_latest_uri: ${{ steps.meta.outputs.image_latest_uri }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required environment variables
+        run: |
+          missing=0
+          for v in CICD_GITHUB_SA GCP_PROJECT_ID WIF; do
+            if [ -z "${!v}" ]; then
+              echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
+              missing=1
+            fi
+          done
+
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Compute image tag
+        id: meta
+        run: |
+          IMAGE_TAG="${GITHUB_SHA::12}"
+          IMAGE_URI="${AR_LOCATION}-docker.pkg.dev/${GCP_PROJECT_ID}/${AR_REPOSITORY}/event-hub-site:${IMAGE_TAG}"
+          IMAGE_LATEST_URI="${AR_LOCATION}-docker.pkg.dev/${GCP_PROJECT_ID}/${AR_REPOSITORY}/event-hub-site:latest"
+          echo "image_tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "image_uri=${IMAGE_URI}" >> "$GITHUB_OUTPUT"
+          echo "image_latest_uri=${IMAGE_LATEST_URI}" >> "$GITHUB_OUTPUT"
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF }}
+          service_account: ${{ env.CICD_GITHUB_SA }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker auth for Artifact Registry
+        run: gcloud auth configure-docker ${AR_LOCATION}-docker.pkg.dev --quiet
+
+      - name: Build container image
+        run: |
+          docker build \
+            --build-arg APP_VERSION=1.0.0 \
+            --build-arg COMMIT_SHA=${GITHUB_SHA} \
+            -f services/event-hub-site/Dockerfile \
+            -t ${{ steps.meta.outputs.image_uri }} \
+            services
+          docker tag ${{ steps.meta.outputs.image_uri }} ${{ steps.meta.outputs.image_latest_uri }}
+
+      - name: Push container image
+        run: |
+          docker push ${{ steps.meta.outputs.image_uri }}
+          docker push ${{ steps.meta.outputs.image_latest_uri }}
+
+  deploy-event-hub-site:
+    name: Deploy event-hub-site to GKE prod
+    runs-on: ubuntu-latest
+    environment: prod
+    needs: build-event-hub-site
+    if: ${{ github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == 'site' }}
+    env:
+      CICD_GITHUB_SA: ${{ vars.CICD_GITHUB_SA }}
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      WIF: ${{ vars.WIF }}
+      AR_LOCATION: ${{ github.event.inputs.ar_location }}
+      AR_REPOSITORY: ${{ github.event.inputs.ar_repository }}
+      K8S_NAMESPACE: ${{ github.event.inputs.k8s_namespace }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required environment variables
+        run: |
+          missing=0
+          for v in CICD_GITHUB_SA GCP_PROJECT_ID WIF K8S_NAMESPACE; do
+            if [ -z "${!v}" ]; then
+              echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
+              missing=1
+            fi
+          done
+
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF }}
+          service_account: ${{ env.CICD_GITHUB_SA }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: prod-autopilot-cluster
+          location: us-central1
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Show kubectl context
+        run: |
+          echo "Current context: $(kubectl config current-context)"
+          echo "Namespace: ${K8S_NAMESPACE}"
+          kubectl cluster-info
+
+      - name: Ensure namespace exists
+        run: kubectl get namespace ${K8S_NAMESPACE} >/dev/null 2>&1 || kubectl create namespace ${K8S_NAMESPACE}
+
+      - name: Apply deployment manifest
+        run: kubectl apply -n ${K8S_NAMESPACE} -f services/event-hub-site/deployment.yml
+
+      - name: Ensure service account exists
+        run: |
+          kubectl get serviceaccount event-hub-site-app -n ${K8S_NAMESPACE} >/dev/null 2>&1 || \
+            kubectl create serviceaccount event-hub-site-app -n ${K8S_NAMESPACE}
+
+      - name: Update image and verify rollout
+        run: |
+          set -e
+          kubectl set image deployment/event-hub-site -n ${K8S_NAMESPACE} \
+            event-hub-site=${{ needs.build-event-hub-site.outputs.image_uri }}
+          if ! kubectl rollout status deployment/event-hub-site -n ${K8S_NAMESPACE} --timeout=420s; then
+            echo "Deployment rollout failed. Collecting diagnostics..."
+            kubectl get deployment event-hub-site -n ${K8S_NAMESPACE} -o wide || true
+            kubectl get rs -n ${K8S_NAMESPACE} -l app=event-hub-site -o wide || true
+            kubectl get pods -n ${K8S_NAMESPACE} -l app=event-hub-site -o wide || true
+            kubectl describe deployment event-hub-site -n ${K8S_NAMESPACE} || true
+            kubectl describe pods -n ${K8S_NAMESPACE} -l app=event-hub-site || true
+            kubectl logs -n ${K8S_NAMESPACE} -l app=event-hub-site --all-containers --tail=200 || true
+            kubectl get events -n ${K8S_NAMESPACE} --sort-by=.metadata.creationTimestamp | tail -n 100 || true
+            exit 1
+          fi
+
+      - name: Show deployed workload
+        run: |
+          kubectl get deployment event-hub-site -n ${K8S_NAMESPACE} -o wide
+          kubectl get pods -n ${K8S_NAMESPACE} -l app=event-hub-site -o wide

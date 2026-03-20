@@ -1,0 +1,329 @@
+name: Event Hub Infra Terraform
+
+on:
+  workflow_dispatch:
+    inputs:
+      cloud:
+        description: Target cloud platform
+        required: true
+        default: gcp
+        type: choice
+        options:
+          - gcp
+          - aws
+          - azure
+      gcp_target:
+        description: GCP Terraform target (GCP only)
+        required: false
+        default: both
+        type: choice
+        options:
+          - project-services
+          - gke
+          - both
+      operation:
+        description: Terraform operation
+        required: true
+        default: apply
+        type: choice
+        options:
+          - apply
+          - destroy
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  terraform-aws:
+    name: Terraform AWS
+    runs-on: ubuntu-latest
+    environment: prod
+    if: ${{ github.event.inputs.cloud == 'aws' }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: services/event-hub-infra-terraform/aws
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      AWS_TERRAFORM_ROLE_ARN: ${{ vars.AWS_TERRAFORM_ROLE_ARN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required environment variables
+        run: |
+          missing=0
+          for v in AWS_REGION AWS_TERRAFORM_ROLE_ARN; do
+            if [ -z "${!v}" ]; then
+              echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ env.AWS_TERRAFORM_ROLE_ARN }}
+
+      - name: Terraform format check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform init
+        run: terraform init -input=false
+
+      - name: Terraform validate
+        run: terraform validate
+
+      - name: Terraform plan
+        run: |
+          if [ "${{ github.event.inputs.operation }}" = "destroy" ]; then
+            terraform plan -destroy -out=tfplan -input=false
+          else
+            terraform plan -out=tfplan -input=false
+          fi
+
+      - name: Terraform apply
+        if: ${{ github.event.inputs.operation == 'apply' }}
+        run: terraform apply -input=false -auto-approve tfplan
+
+      - name: Terraform destroy
+        if: ${{ github.event.inputs.operation == 'destroy' }}
+        run: terraform destroy -input=false -auto-approve
+
+  terraform-azure:
+    name: Terraform Azure
+    runs-on: ubuntu-latest
+    environment: prod
+    if: ${{ github.event.inputs.cloud == 'azure' }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: services/event-hub-infra-terraform/azure
+    env:
+      AZURE_TERRAFORM_CLIENT_ID: ${{ vars.AZURE_TERRAFORM_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      ARM_USE_OIDC: true
+      ARM_CLIENT_ID: ${{ vars.AZURE_TERRAFORM_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required environment variables
+        run: |
+          missing=0
+          for v in AZURE_TERRAFORM_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID; do
+            if [ -z "${!v}" ]; then
+              echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ env.AZURE_TERRAFORM_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Terraform format check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform init
+        run: terraform init -input=false
+
+      - name: Terraform validate
+        run: terraform validate
+
+      - name: Terraform plan
+        run: |
+          if [ "${{ github.event.inputs.operation }}" = "destroy" ]; then
+            terraform plan -destroy -out=tfplan -input=false
+          else
+            terraform plan -out=tfplan -input=false
+          fi
+
+      - name: Terraform apply
+        if: ${{ github.event.inputs.operation == 'apply' }}
+        run: terraform apply -input=false -auto-approve tfplan
+
+      - name: Terraform destroy
+        if: ${{ github.event.inputs.operation == 'destroy' }}
+        run: terraform destroy -input=false -auto-approve
+
+  terraform-gcp-project-services:
+    name: Terraform GCP project-services
+    runs-on: ubuntu-latest
+    environment: prod
+    if: ${{ github.event.inputs.cloud == 'gcp' && (github.event.inputs.gcp_target == 'project-services' || github.event.inputs.gcp_target == 'both') }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: services/event-hub-infra-terraform/gcp/project-services
+    env:
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      TERRAFORM_SA_ID: ${{ vars.TERRAFORM_SA_ID }}
+      WIF: ${{ vars.WIF }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Debug Terraform source version
+        run: |
+          echo "Git commit: $(git rev-parse HEAD)"
+          echo "Working directory: $(pwd)"
+          echo "Terraform files fingerprint:"
+          sha256sum main.tf provider.tf variables.tf 2>/dev/null || true
+          echo "Relevant main.tf snippet:"
+          sed -n '1,120p' main.tf
+
+      - name: Validate required environment variables
+        run: |
+          missing=0
+          for v in GCP_PROJECT_ID TERRAFORM_SA_ID WIF; do
+            if [ -z "${!v}" ]; then
+              echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF }}
+          service_account: ${{ env.TERRAFORM_SA_ID }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Terraform format check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform init
+        run: terraform init -input=false
+
+      - name: Terraform validate
+        run: terraform validate
+
+      - name: Terraform plan
+        run: |
+          if [ "${{ github.event.inputs.operation }}" = "destroy" ]; then
+            terraform plan -destroy -out=tfplan -input=false
+          else
+            terraform plan -out=tfplan -input=false
+          fi
+
+      - name: Terraform apply
+        if: ${{ github.event.inputs.operation == 'apply' }}
+        run: terraform apply -input=false -auto-approve tfplan
+
+      - name: Terraform destroy
+        if: ${{ github.event.inputs.operation == 'destroy' }}
+        run: terraform destroy -input=false -auto-approve
+
+  terraform-gcp-gke:
+    name: Terraform GCP gke
+    runs-on: ubuntu-latest
+    environment: prod
+    if: ${{ github.event.inputs.cloud == 'gcp' && (github.event.inputs.gcp_target == 'gke' || github.event.inputs.gcp_target == 'both') }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: services/event-hub-infra-terraform/gcp/gke
+    env:
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      TERRAFORM_SA_ID: ${{ vars.TERRAFORM_SA_ID }}
+      WIF: ${{ vars.WIF }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Debug Terraform source version
+        run: |
+          echo "Git commit: $(git rev-parse HEAD)"
+          echo "Working directory: $(pwd)"
+          echo "Terraform files fingerprint:"
+          sha256sum main.tf provider.tf variables.tf 2>/dev/null || true
+          echo "Relevant main.tf snippet:"
+          sed -n '1,120p' main.tf
+
+      - name: Validate required environment variables
+        run: |
+          missing=0
+          for v in GCP_PROJECT_ID TERRAFORM_SA_ID WIF; do
+            if [ -z "${!v}" ]; then
+              echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF }}
+          service_account: ${{ env.TERRAFORM_SA_ID }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Terraform format check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform init
+        run: terraform init -input=false
+
+      - name: Remove legacy service resources from state
+        run: |
+          for r in google_project_service.compute google_project_service.container google_project_service.storage; do
+            if terraform state list | grep -qx "$r"; then
+              echo "Removing legacy state resource: $r"
+              terraform state rm "$r"
+            fi
+          done
+
+      - name: Terraform validate
+        run: terraform validate
+
+      - name: Terraform plan
+        run: |
+          if [ "${{ github.event.inputs.operation }}" = "destroy" ]; then
+            terraform plan -destroy -out=tfplan -input=false
+          else
+            terraform plan -out=tfplan -input=false
+          fi
+
+      - name: Terraform apply
+        if: ${{ github.event.inputs.operation == 'apply' }}
+        run: terraform apply -input=false -auto-approve tfplan
+
+      - name: Terraform destroy
+        if: ${{ github.event.inputs.operation == 'destroy' }}
+        run: terraform destroy -input=false -auto-approve

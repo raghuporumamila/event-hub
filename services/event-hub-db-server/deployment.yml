@@ -323,11 +323,13 @@ spec:
                 secretKeyRef:
                   name: alloydb-secret
                   key: POSTGRES_PASSWORD
-          securityContext:
-            capabilities:
-              add:
-                - IPC_LOCK
-                - SYS_NICE
+          resources:
+            requests:
+              cpu: "1000m"
+              memory: "4Gi"
+            limits:
+              cpu: "2000m"
+              memory: "8Gi"
           volumeMounts:
             - name: data
               mountPath: /var/lib/postgresql/data

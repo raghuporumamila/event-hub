@@ -323,6 +323,10 @@ spec:
                 secretKeyRef:
                   name: alloydb-secret
                   key: POSTGRES_PASSWORD
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+            - name: DATA_DIR
+              value: /var/lib/postgresql/data/pgdata
           resources:
             requests:
               cpu: "1000m"

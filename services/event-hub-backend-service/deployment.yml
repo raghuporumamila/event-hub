@@ -21,6 +21,16 @@ spec:
         - name: event-hub-backend-service
           image: us-central1-docker.pkg.dev/event-hub-317019/event-hub/event-hub-backend-service:latest
           imagePullPolicy: Always
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://alloydb:5432/eventhub
+            - name: SPRING_DATASOURCE_USERNAME
+              value: postgres
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: alloydb-secret
+                  key: POSTGRES_PASSWORD
           ports:
             - name: http
               containerPort: 8080

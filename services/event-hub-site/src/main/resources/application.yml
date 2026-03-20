@@ -1,14 +1,11 @@
 spring:
-  # 1. You can remove the H2 console section as it's not used for AlloyDB
   datasource:
-    # 2. Update the JDBC URL, driver, and credentials
-    url: jdbc:postgresql://localhost:5432/eventhub
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/eventhub}
     driver-class-name: org.postgresql.Driver
-    username: postgres  # Default user for AlloyDB Omni
-    password: password # Set when you started the container
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:password}
 
   jpa:
-    # 3. Change the database platform to PostgreSQL
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
@@ -20,7 +17,7 @@ evenhub:
   rest:
     client:
       #daoApiEndpoint: http://192.168.4.152:30080
-      daoApiEndpoint: http://localhost:8081
-      schemaApiEndpoint: http://localhost:8082
+      daoApiEndpoint: ${DAO_API_ENDPOINT:http://event-hub-backend-service:8080}
+      schemaApiEndpoint: ${SCHEMA_API_ENDPOINT:http://event-hub-schema:8080}
       publisherApiEndpoint: http://localhost:8083
       genAIAPIEndpoint: http://localhost:8000

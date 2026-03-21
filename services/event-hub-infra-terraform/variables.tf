@@ -1,15 +1,15 @@
 variable "project_id" {
-    type = string
+  type = string
 }
 variable "env_prefix" {
-    type = string
+  type = string
 }
 variable "topic_name" {
-    type = string
-    default = "consumer-events"
+  type    = string
+  default = "consumer-events"
 }
 variable "subscription_name" {
-    type = string
-    default = "consumer-events_sub"
+  type    = string
+  default = "consumer-events_sub"
 }
 

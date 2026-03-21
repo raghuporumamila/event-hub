@@ -13,8 +13,8 @@ resource "azurerm_storage_account" "backend" {
 }
 
 resource "azurerm_storage_container" "backend" {
-  name                 = "tfstate"
-  storage_account_id   = azurerm_storage_account.backend.id
+  name                  = "tfstate"
+  storage_account_id    = azurerm_storage_account.backend.id
   container_access_type = "private"
 }
 
@@ -55,9 +55,9 @@ resource "azurerm_kubernetes_cluster" "main" {
   dns_prefix          = "eventhub"
 
   default_node_pool {
-    name       = "default"
-    node_count = 1
-    vm_size    = "Standard_D2s_v3"
+    name           = "default"
+    node_count     = 1
+    vm_size        = "Standard_D2s_v3"
     vnet_subnet_id = azurerm_subnet.subnet1.id
   }
 

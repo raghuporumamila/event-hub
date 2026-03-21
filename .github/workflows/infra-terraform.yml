@@ -21,6 +21,15 @@ on:
           - project-services
           - gke
           - both
+      aws_target:
+        description: AWS Terraform target (AWS only)
+        required: false
+        default: both
+        type: choice
+        options:
+          - pre-ci-cd
+          - aks
+          - both
       operation:
         description: Terraform operation
         required: true
@@ -35,15 +44,79 @@ permissions:
   id-token: write
 
 jobs:
-  terraform-aws:
-    name: Terraform AWS
+  terraform-aws-pre-ci-cd:
+    name: Terraform AWS pre-ci-cd
     runs-on: ubuntu-latest
     environment: prod
-    if: ${{ github.event.inputs.cloud == 'aws' }}
+    if: ${{ github.event.inputs.cloud == 'aws' && (github.event.inputs.aws_target == 'pre-ci-cd' || github.event.inputs.aws_target == 'both') }}
     defaults:
       run:
         shell: bash
-        working-directory: services/event-hub-infra-terraform/aws
+        working-directory: services/event-hub-infra-terraform/aws/pre-ci-cd
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      AWS_TERRAFORM_ROLE_ARN: ${{ vars.AWS_TERRAFORM_ROLE_ARN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required environment variables
+        run: |
+          missing=0
+          for v in AWS_REGION AWS_TERRAFORM_ROLE_ARN; do
+            if [ -z "${!v}" ]; then
+              echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ env.AWS_TERRAFORM_ROLE_ARN }}
+
+      - name: Terraform format check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform init
+        run: terraform init -input=false
+
+      - name: Terraform validate
+        run: terraform validate
+
+      - name: Terraform plan
+        run: |
+          if [ "${{ github.event.inputs.operation }}" = "destroy" ]; then
+            terraform plan -destroy -out=tfplan -input=false
+          else
+            terraform plan -out=tfplan -input=false
+          fi
+
+      - name: Terraform apply
+        if: ${{ github.event.inputs.operation == 'apply' }}
+        run: terraform apply -input=false -auto-approve tfplan
+
+      - name: Terraform destroy
+        if: ${{ github.event.inputs.operation == 'destroy' }}
+        run: terraform destroy -input=false -auto-approve
+
+  terraform-aws-aks:
+    name: Terraform AWS aks
+    runs-on: ubuntu-latest
+    environment: prod
+    if: ${{ github.event.inputs.cloud == 'aws' && (github.event.inputs.aws_target == 'aks' || github.event.inputs.aws_target == 'both') }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: services/event-hub-infra-terraform/aws/aks
     env:
       AWS_REGION: ${{ vars.AWS_REGION }}
       AWS_TERRAFORM_ROLE_ARN: ${{ vars.AWS_TERRAFORM_ROLE_ARN }}

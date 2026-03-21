@@ -59,9 +59,9 @@ jobs:
     environment: prod
     if: ${{ github.event.inputs.cloud == 'gcp' && (github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == 'schema') }}
     env:
-      CICD_GITHUB_SA: ${{ vars.CICD_GITHUB_SA }}
+      GCP_CICD_GITHUB_SA: ${{ vars.GCP_CICD_GITHUB_SA }}
       GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
-      WIF: ${{ vars.WIF }}
+      GCP_WIF: ${{ vars.GCP_WIF }}
       AR_LOCATION: ${{ github.event.inputs.ar_location }}
       AR_REPOSITORY: ${{ github.event.inputs.registry_repository }}
     outputs:
@@ -75,7 +75,7 @@ jobs:
       - name: Validate required environment variables
         run: |
           missing=0
-          for v in CICD_GITHUB_SA GCP_PROJECT_ID WIF; do
+          for v in GCP_CICD_GITHUB_SA GCP_PROJECT_ID GCP_WIF; do
             if [ -z "${!v}" ]; then
               echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
               missing=1
@@ -97,8 +97,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ env.WIF }}
-          service_account: ${{ env.CICD_GITHUB_SA }}
+          workload_identity_provider: ${{ env.GCP_WIF }}
+          service_account: ${{ env.GCP_CICD_GITHUB_SA }}
           project_id: ${{ env.GCP_PROJECT_ID }}
 
       - name: Setup gcloud
@@ -262,9 +262,9 @@ jobs:
     environment: prod
     if: ${{ github.event.inputs.cloud == 'gcp' && (github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == 'backend') }}
     env:
-      CICD_GITHUB_SA: ${{ vars.CICD_GITHUB_SA }}
+      GCP_CICD_GITHUB_SA: ${{ vars.GCP_CICD_GITHUB_SA }}
       GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
-      WIF: ${{ vars.WIF }}
+      GCP_WIF: ${{ vars.GCP_WIF }}
       AR_LOCATION: ${{ github.event.inputs.ar_location }}
       AR_REPOSITORY: ${{ github.event.inputs.registry_repository }}
     outputs:
@@ -278,7 +278,7 @@ jobs:
       - name: Validate required environment variables
         run: |
           missing=0
-          for v in CICD_GITHUB_SA GCP_PROJECT_ID WIF; do
+          for v in GCP_CICD_GITHUB_SA GCP_PROJECT_ID GCP_WIF; do
             if [ -z "${!v}" ]; then
               echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
               missing=1
@@ -300,8 +300,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ env.WIF }}
-          service_account: ${{ env.CICD_GITHUB_SA }}
+          workload_identity_provider: ${{ env.GCP_WIF }}
+          service_account: ${{ env.GCP_CICD_GITHUB_SA }}
           project_id: ${{ env.GCP_PROJECT_ID }}
 
       - name: Setup gcloud
@@ -465,9 +465,9 @@ jobs:
     environment: prod
     if: ${{ github.event.inputs.cloud == 'gcp' && (github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == 'site') }}
     env:
-      CICD_GITHUB_SA: ${{ vars.CICD_GITHUB_SA }}
+      GCP_CICD_GITHUB_SA: ${{ vars.GCP_CICD_GITHUB_SA }}
       GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
-      WIF: ${{ vars.WIF }}
+      GCP_WIF: ${{ vars.GCP_WIF }}
       AR_LOCATION: ${{ github.event.inputs.ar_location }}
       AR_REPOSITORY: ${{ github.event.inputs.registry_repository }}
     outputs:
@@ -481,7 +481,7 @@ jobs:
       - name: Validate required environment variables
         run: |
           missing=0
-          for v in CICD_GITHUB_SA GCP_PROJECT_ID WIF; do
+          for v in GCP_CICD_GITHUB_SA GCP_PROJECT_ID GCP_WIF; do
             if [ -z "${!v}" ]; then
               echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
               missing=1
@@ -503,8 +503,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ env.WIF }}
-          service_account: ${{ env.CICD_GITHUB_SA }}
+          workload_identity_provider: ${{ env.GCP_WIF }}
+          service_account: ${{ env.GCP_CICD_GITHUB_SA }}
           project_id: ${{ env.GCP_PROJECT_ID }}
 
       - name: Setup gcloud
@@ -669,10 +669,10 @@ jobs:
     needs: build-event-hub-schema-gcp
     if: ${{ github.event.inputs.cloud == 'gcp' && (github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == 'schema') }}
     env:
-      CICD_GITHUB_SA: ${{ vars.CICD_GITHUB_SA }}
+      GCP_CICD_GITHUB_SA: ${{ vars.GCP_CICD_GITHUB_SA }}
       GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
       GCP_APP_SERVICE_ACCOUNT_EMAIL: ${{ vars.GCP_APP_SERVICE_ACCOUNT_EMAIL }}
-      WIF: ${{ vars.WIF }}
+      GCP_WIF: ${{ vars.GCP_WIF }}
       K8S_NAMESPACE: ${{ github.event.inputs.k8s_namespace }}
 
     steps:
@@ -682,7 +682,7 @@ jobs:
       - name: Validate required environment variables
         run: |
           missing=0
-          for v in CICD_GITHUB_SA GCP_PROJECT_ID GCP_APP_SERVICE_ACCOUNT_EMAIL WIF K8S_NAMESPACE; do
+          for v in GCP_CICD_GITHUB_SA GCP_PROJECT_ID GCP_APP_SERVICE_ACCOUNT_EMAIL GCP_WIF K8S_NAMESPACE; do
             if [ -z "${!v}" ]; then
               echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
               missing=1
@@ -695,8 +695,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ env.WIF }}
-          service_account: ${{ env.CICD_GITHUB_SA }}
+          workload_identity_provider: ${{ env.GCP_WIF }}
+          service_account: ${{ env.GCP_CICD_GITHUB_SA }}
           project_id: ${{ env.GCP_PROJECT_ID }}
 
       - name: Setup gcloud
@@ -944,10 +944,10 @@ jobs:
     needs: build-event-hub-backend-service-gcp
     if: ${{ github.event.inputs.cloud == 'gcp' && (github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == 'backend') }}
     env:
-      CICD_GITHUB_SA: ${{ vars.CICD_GITHUB_SA }}
+      GCP_CICD_GITHUB_SA: ${{ vars.GCP_CICD_GITHUB_SA }}
       GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
       GCP_APP_SERVICE_ACCOUNT_EMAIL: ${{ vars.GCP_APP_SERVICE_ACCOUNT_EMAIL }}
-      WIF: ${{ vars.WIF }}
+      GCP_WIF: ${{ vars.GCP_WIF }}
       K8S_NAMESPACE: ${{ github.event.inputs.k8s_namespace }}
 
     steps:
@@ -957,7 +957,7 @@ jobs:
       - name: Validate required environment variables
         run: |
           missing=0
-          for v in CICD_GITHUB_SA GCP_PROJECT_ID GCP_APP_SERVICE_ACCOUNT_EMAIL WIF K8S_NAMESPACE; do
+          for v in GCP_CICD_GITHUB_SA GCP_PROJECT_ID GCP_APP_SERVICE_ACCOUNT_EMAIL GCP_WIF K8S_NAMESPACE; do
             if [ -z "${!v}" ]; then
               echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
               missing=1
@@ -970,8 +970,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ env.WIF }}
-          service_account: ${{ env.CICD_GITHUB_SA }}
+          workload_identity_provider: ${{ env.GCP_WIF }}
+          service_account: ${{ env.GCP_CICD_GITHUB_SA }}
           project_id: ${{ env.GCP_PROJECT_ID }}
 
       - name: Setup gcloud
@@ -1217,10 +1217,10 @@ jobs:
     needs: build-event-hub-site-gcp
     if: ${{ github.event.inputs.cloud == 'gcp' && (github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == 'site') }}
     env:
-      CICD_GITHUB_SA: ${{ vars.CICD_GITHUB_SA }}
+      GCP_CICD_GITHUB_SA: ${{ vars.GCP_CICD_GITHUB_SA }}
       GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
       GCP_APP_SERVICE_ACCOUNT_EMAIL: ${{ vars.GCP_APP_SERVICE_ACCOUNT_EMAIL }}
-      WIF: ${{ vars.WIF }}
+      GCP_WIF: ${{ vars.GCP_WIF }}
       K8S_NAMESPACE: ${{ github.event.inputs.k8s_namespace }}
 
     steps:
@@ -1230,7 +1230,7 @@ jobs:
       - name: Validate required environment variables
         run: |
           missing=0
-          for v in CICD_GITHUB_SA GCP_PROJECT_ID GCP_APP_SERVICE_ACCOUNT_EMAIL WIF K8S_NAMESPACE; do
+          for v in GCP_CICD_GITHUB_SA GCP_PROJECT_ID GCP_APP_SERVICE_ACCOUNT_EMAIL GCP_WIF K8S_NAMESPACE; do
             if [ -z "${!v}" ]; then
               echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
               missing=1
@@ -1243,8 +1243,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ env.WIF }}
-          service_account: ${{ env.CICD_GITHUB_SA }}
+          workload_identity_provider: ${{ env.GCP_WIF }}
+          service_account: ${{ env.GCP_CICD_GITHUB_SA }}
           project_id: ${{ env.GCP_PROJECT_ID }}
 
       - name: Setup gcloud
@@ -1492,9 +1492,9 @@ jobs:
     environment: prod
     if: ${{ github.event.inputs.cloud == 'gcp' && (github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == 'db') }}
     env:
-      CICD_GITHUB_SA: ${{ vars.CICD_GITHUB_SA }}
+      GCP_CICD_GITHUB_SA: ${{ vars.GCP_CICD_GITHUB_SA }}
       GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
-      WIF: ${{ vars.WIF }}
+      GCP_WIF: ${{ vars.GCP_WIF }}
       K8S_NAMESPACE: ${{ github.event.inputs.k8s_namespace }}
 
     steps:
@@ -1504,7 +1504,7 @@ jobs:
       - name: Validate required environment variables
         run: |
           missing=0
-          for v in CICD_GITHUB_SA GCP_PROJECT_ID WIF K8S_NAMESPACE; do
+          for v in GCP_CICD_GITHUB_SA GCP_PROJECT_ID GCP_WIF K8S_NAMESPACE; do
             if [ -z "${!v}" ]; then
               echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
               missing=1
@@ -1517,8 +1517,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ env.WIF }}
-          service_account: ${{ env.CICD_GITHUB_SA }}
+          workload_identity_provider: ${{ env.GCP_WIF }}
+          service_account: ${{ env.GCP_CICD_GITHUB_SA }}
           project_id: ${{ env.GCP_PROJECT_ID }}
 
       - name: Setup gcloud

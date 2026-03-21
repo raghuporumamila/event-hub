@@ -180,8 +180,8 @@ jobs:
         working-directory: services/event-hub-infra-terraform/gcp/project-services
     env:
       GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
-      TERRAFORM_SA_ID: ${{ vars.TERRAFORM_SA_ID }}
-      WIF: ${{ vars.WIF }}
+      GCP_TERRAFORM_SA_ID: ${{ vars.GCP_TERRAFORM_SA_ID }}
+      GCP_WIF: ${{ vars.GCP_WIF }}
 
     steps:
       - name: Checkout
@@ -199,7 +199,7 @@ jobs:
       - name: Validate required environment variables
         run: |
           missing=0
-          for v in GCP_PROJECT_ID TERRAFORM_SA_ID WIF; do
+          for v in GCP_PROJECT_ID GCP_TERRAFORM_SA_ID GCP_WIF; do
             if [ -z "${!v}" ]; then
               echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
               missing=1
@@ -215,8 +215,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ env.WIF }}
-          service_account: ${{ env.TERRAFORM_SA_ID }}
+          workload_identity_provider: ${{ env.GCP_WIF }}
+          service_account: ${{ env.GCP_TERRAFORM_SA_ID }}
           project_id: ${{ env.GCP_PROJECT_ID }}
 
       - name: Terraform format check
@@ -255,8 +255,8 @@ jobs:
         working-directory: services/event-hub-infra-terraform/gcp/gke
     env:
       GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
-      TERRAFORM_SA_ID: ${{ vars.TERRAFORM_SA_ID }}
-      WIF: ${{ vars.WIF }}
+      GCP_TERRAFORM_SA_ID: ${{ vars.GCP_TERRAFORM_SA_ID }}
+      GCP_WIF: ${{ vars.GCP_WIF }}
 
     steps:
       - name: Checkout
@@ -274,7 +274,7 @@ jobs:
       - name: Validate required environment variables
         run: |
           missing=0
-          for v in GCP_PROJECT_ID TERRAFORM_SA_ID WIF; do
+          for v in GCP_PROJECT_ID GCP_TERRAFORM_SA_ID GCP_WIF; do
             if [ -z "${!v}" ]; then
               echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
               missing=1
@@ -290,8 +290,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ env.WIF }}
-          service_account: ${{ env.TERRAFORM_SA_ID }}
+          workload_identity_provider: ${{ env.GCP_WIF }}
+          service_account: ${{ env.GCP_TERRAFORM_SA_ID }}
           project_id: ${{ env.GCP_PROJECT_ID }}
 
       - name: Terraform format check

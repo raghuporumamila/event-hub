@@ -29,12 +29,6 @@ variable "github_repository" {
   type        = string
 }
 
-variable "cicd_role_name" {
-  description = "IAM role name assumed by GitHub Actions via OIDC"
-  type        = string
-  default     = "event-hub-github-cicd-role"
-}
-
 variable "app_iam_role_name" {
   description = "IAM role name used by the application Kubernetes service account"
   type        = string
@@ -51,12 +45,6 @@ variable "kubernetes_service_account_name" {
   description = "Kubernetes service account name bound to the application IAM role"
   type        = string
   default     = "event-hub-app"
-}
-
-variable "ecr_repository_name" {
-  description = "ECR repository name for Event Hub images"
-  type        = string
-  default     = "event-hub"
 }
 
 variable "app_bucket_name" {

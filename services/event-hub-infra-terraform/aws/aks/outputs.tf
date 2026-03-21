@@ -18,16 +18,6 @@ output "app_iam_role_arn" {
   description = "Application IAM role ARN for Kubernetes service account binding"
 }
 
-output "github_actions_role_arn" {
-  value       = aws_iam_role.github_cicd.arn
-  description = "GitHub Actions IAM role ARN for CI/CD"
-}
-
-output "ecr_repository_url" {
-  value       = aws_ecr_repository.event_hub.repository_url
-  description = "ECR repository URL for Event Hub images"
-}
-
 output "event_topic_arn" {
   value       = aws_sns_topic.event_hub.arn
   description = "SNS topic ARN for published events"

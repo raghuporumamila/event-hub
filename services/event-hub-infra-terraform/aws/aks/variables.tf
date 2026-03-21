@@ -29,6 +29,12 @@ variable "github_repository" {
   type        = string
 }
 
+variable "cicd_role_name" {
+  description = "IAM role name assumed by GitHub Actions via OIDC"
+  type        = string
+  default     = "event-hub-github-cicd-role"
+}
+
 variable "app_iam_role_name" {
   description = "IAM role name used by the application Kubernetes service account"
   type        = string

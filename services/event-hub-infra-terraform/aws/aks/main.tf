@@ -4,6 +4,10 @@ data "aws_availability_zones" "available" {
 
 data "aws_partition" "current" {}
 
+data "aws_iam_role" "github_cicd" {
+  name = var.cicd_role_name
+}
+
 locals {
   eks_oidc_issuer_host = trimprefix(aws_eks_cluster.main.identity[0].oidc[0].issuer, "https://")
   common_tags = {
@@ -315,13 +319,13 @@ resource "aws_iam_role_policy_attachment" "app_runtime" {
 
 resource "aws_eks_access_entry" "github_cicd" {
   cluster_name  = aws_eks_cluster.main.name
-  principal_arn = aws_iam_role.github_cicd.arn
+  principal_arn = data.aws_iam_role.github_cicd.arn
   type          = "STANDARD"
 }
 
 resource "aws_eks_access_policy_association" "github_cicd" {
   cluster_name  = aws_eks_cluster.main.name
-  principal_arn = aws_iam_role.github_cicd.arn
+  principal_arn = data.aws_iam_role.github_cicd.arn
   policy_arn    = "arn:${data.aws_partition.current.partition}:eks::aws:cluster-access-policy/AmazonEKSAdminPolicy"
 
   access_scope {

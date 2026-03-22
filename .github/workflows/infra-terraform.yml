@@ -18,6 +18,7 @@ on:
         default: both
         type: choice
         options:
+          - pre-ci-cd
           - project-services
           - gke
           - both
@@ -459,11 +460,78 @@ jobs:
       - name: Terraform destroy
         run: terraform destroy -input=false -auto-approve
 
+  terraform-gcp-pre-ci-cd:
+    name: Terraform GCP pre-ci-cd
+    runs-on: ubuntu-latest
+    environment: prod
+    if: ${{ github.event.inputs.cloud == 'gcp' && (github.event.inputs.gcp_target == 'pre-ci-cd' || github.event.inputs.gcp_target == 'both') }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: services/event-hub-infra-terraform/gcp/pre-ci-cd
+    env:
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      GCP_TERRAFORM_SA_ID: ${{ vars.GCP_TERRAFORM_SA_ID }}
+      GCP_WIF: ${{ vars.GCP_WIF }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required environment variables
+        run: |
+          missing=0
+          for v in GCP_PROJECT_ID GCP_TERRAFORM_SA_ID GCP_WIF; do
+            if [ -z "${!v}" ]; then
+              echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.GCP_WIF }}
+          service_account: ${{ env.GCP_TERRAFORM_SA_ID }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Terraform format check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform init
+        run: terraform init -input=false
+
+      - name: Terraform validate
+        run: terraform validate
+
+      - name: Terraform plan
+        run: |
+          if [ "${{ github.event.inputs.operation }}" = "destroy" ]; then
+            terraform plan -destroy -out=tfplan -input=false
+          else
+            terraform plan -out=tfplan -input=false
+          fi
+
+      - name: Terraform apply
+        if: ${{ github.event.inputs.operation == 'apply' }}
+        run: terraform apply -input=false -auto-approve tfplan
+
+      - name: Terraform destroy
+        if: ${{ github.event.inputs.operation == 'destroy' && github.event.inputs.gcp_target != 'both' }}
+        run: terraform destroy -input=false -auto-approve
+
   terraform-gcp-project-services:
     name: Terraform GCP project-services
     runs-on: ubuntu-latest
     environment: prod
-    if: ${{ github.event.inputs.cloud == 'gcp' && (github.event.inputs.gcp_target == 'project-services' || github.event.inputs.gcp_target == 'both') }}
+    needs: terraform-gcp-pre-ci-cd
+    if: ${{ github.event.inputs.cloud == 'gcp' && (github.event.inputs.gcp_target == 'project-services' || github.event.inputs.gcp_target == 'both') && (needs.terraform-gcp-pre-ci-cd.result == 'success' || needs.terraform-gcp-pre-ci-cd.result == 'skipped') }}
     defaults:
       run:
         shell: bash
@@ -549,6 +617,7 @@ jobs:
       GCP_TERRAFORM_SA_ID: ${{ vars.GCP_TERRAFORM_SA_ID }}
       GCP_WIF: ${{ vars.GCP_WIF }}
       GCP_TERRAFORM_STATE_BUCKET: event-hub-terraform-prod
+      GCP_CICD_SA_EMAIL: ${{ vars.GCP_CICD_SA_EMAIL }}
 
     steps:
       - name: Checkout
@@ -601,7 +670,12 @@ jobs:
               exit 1
             fi
           done
-          echo "Found prerequisite bucket and required APIs for GKE Terraform."
+          CICD_SA="${GCP_CICD_SA_EMAIL:-github-cicd-sa@${GCP_PROJECT_ID}.iam.gserviceaccount.com}"
+          if ! gcloud iam service-accounts describe "${CICD_SA}" --project "${GCP_PROJECT_ID}" >/dev/null 2>&1; then
+            echo "::error::Missing prerequisite CI/CD service account '${CICD_SA}'. Run Terraform target 'pre-ci-cd' first, or set GitHub variable GCP_CICD_SA_EMAIL to the correct service account email."
+            exit 1
+          fi
+          echo "Found prerequisite bucket, required APIs, and CI/CD service account for GKE Terraform."
 
       - name: Terraform format check
         run: terraform fmt -check -recursive
@@ -642,11 +716,65 @@ jobs:
     runs-on: ubuntu-latest
     environment: prod
     needs: terraform-gcp-gke
-    if: ${{ github.event.inputs.cloud == 'gcp' && github.event.inputs.gcp_target == 'both' && github.event.inputs.operation == 'destroy' && needs.terraform-gcp-gke.result == 'success' }}
+    if: ${{ github.event.inputs.cloud == 'gcp' && github.event.inputs.gcp_target == 'both' && github.event.inputs.operation == 'destroy' && needs.terraform-gcp-gke.result == 'success' && needs.terraform-gcp-gke.result != 'skipped' }}
     defaults:
       run:
         shell: bash
         working-directory: services/event-hub-infra-terraform/gcp/project-services
+    env:
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      GCP_TERRAFORM_SA_ID: ${{ vars.GCP_TERRAFORM_SA_ID }}
+      GCP_WIF: ${{ vars.GCP_WIF }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required environment variables
+        run: |
+          missing=0
+          for v in GCP_PROJECT_ID GCP_TERRAFORM_SA_ID GCP_WIF; do
+            if [ -z "${!v}" ]; then
+              echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.GCP_WIF }}
+          service_account: ${{ env.GCP_TERRAFORM_SA_ID }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Terraform format check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform init
+        run: terraform init -input=false
+
+      - name: Terraform validate
+        run: terraform validate
+
+      - name: Terraform destroy
+        run: terraform destroy -input=false -auto-approve
+
+  terraform-gcp-pre-ci-cd-destroy-after-project-services:
+    name: Terraform GCP pre-ci-cd destroy (after project-services)
+    runs-on: ubuntu-latest
+    environment: prod
+    needs: terraform-gcp-project-services-destroy-after-gke
+    if: ${{ github.event.inputs.cloud == 'gcp' && github.event.inputs.gcp_target == 'both' && github.event.inputs.operation == 'destroy' && needs.terraform-gcp-project-services-destroy-after-gke.result == 'success' }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: services/event-hub-infra-terraform/gcp/pre-ci-cd
     env:
       GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
       GCP_TERRAFORM_SA_ID: ${{ vars.GCP_TERRAFORM_SA_ID }}

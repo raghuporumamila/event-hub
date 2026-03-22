@@ -68,7 +68,7 @@ resource "azuread_application_federated_identity_credential" "terraform" {
   description    = "GitHub Actions OIDC for Terraform execution"
   audiences      = ["api://AzureADTokenExchange"]
   issuer         = "https://token.actions.githubusercontent.com"
-  subject        = "repo:${var.github_repository}:ref:refs/heads/main"
+  subject        = "repo:${var.github_repository}:environment:prod"
 }
 
 # ---------------------------------------------------------------------------
@@ -91,7 +91,7 @@ resource "azuread_application_federated_identity_credential" "github_cicd" {
   description    = "GitHub Actions OIDC for CI/CD deploy jobs"
   audiences      = ["api://AzureADTokenExchange"]
   issuer         = "https://token.actions.githubusercontent.com"
-  subject        = "repo:${var.github_repository}:ref:refs/heads/main"
+  subject        = "repo:${var.github_repository}:environment:prod"
 }
 
 data "azurerm_subscription" "current" {}

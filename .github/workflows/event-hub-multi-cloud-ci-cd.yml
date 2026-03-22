@@ -194,7 +194,7 @@ jobs:
     environment: prod
     if: ${{ github.event.inputs.cloud == 'azure' && (github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == 'schema') }}
     env:
-      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      AZURE_DEPLOY_CLIENT_ID: ${{ vars.AZURE_DEPLOY_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       ACR_NAME: ${{ vars.ACR_NAME }}
@@ -210,7 +210,7 @@ jobs:
       - name: Validate required environment variables
         run: |
           missing=0
-          for v in AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID ACR_NAME ACR_REPOSITORY; do
+          for v in AZURE_DEPLOY_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID ACR_NAME ACR_REPOSITORY; do
             if [ -z "${!v}" ]; then
               echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
               missing=1
@@ -223,7 +223,7 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ env.AZURE_CLIENT_ID }}
+          client-id: ${{ env.AZURE_DEPLOY_CLIENT_ID }}
           tenant-id: ${{ env.AZURE_TENANT_ID }}
           subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
@@ -397,7 +397,7 @@ jobs:
     environment: prod
     if: ${{ github.event.inputs.cloud == 'azure' && (github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == 'backend') }}
     env:
-      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      AZURE_DEPLOY_CLIENT_ID: ${{ vars.AZURE_DEPLOY_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       ACR_NAME: ${{ vars.ACR_NAME }}
@@ -413,7 +413,7 @@ jobs:
       - name: Validate required environment variables
         run: |
           missing=0
-          for v in AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID ACR_NAME ACR_REPOSITORY; do
+          for v in AZURE_DEPLOY_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID ACR_NAME ACR_REPOSITORY; do
             if [ -z "${!v}" ]; then
               echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
               missing=1
@@ -426,7 +426,7 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ env.AZURE_CLIENT_ID }}
+          client-id: ${{ env.AZURE_DEPLOY_CLIENT_ID }}
           tenant-id: ${{ env.AZURE_TENANT_ID }}
           subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
@@ -600,7 +600,7 @@ jobs:
     environment: prod
     if: ${{ github.event.inputs.cloud == 'azure' && (github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == 'site') }}
     env:
-      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      AZURE_DEPLOY_CLIENT_ID: ${{ vars.AZURE_DEPLOY_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       ACR_NAME: ${{ vars.ACR_NAME }}
@@ -616,7 +616,7 @@ jobs:
       - name: Validate required environment variables
         run: |
           missing=0
-          for v in AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID ACR_NAME ACR_REPOSITORY; do
+          for v in AZURE_DEPLOY_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID ACR_NAME ACR_REPOSITORY; do
             if [ -z "${!v}" ]; then
               echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
               missing=1
@@ -629,7 +629,7 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ env.AZURE_CLIENT_ID }}
+          client-id: ${{ env.AZURE_DEPLOY_CLIENT_ID }}
           tenant-id: ${{ env.AZURE_TENANT_ID }}
           subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
@@ -850,7 +850,7 @@ jobs:
     needs: build-event-hub-schema-azure
     if: ${{ github.event.inputs.cloud == 'azure' && (github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == 'schema') }}
     env:
-      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      AZURE_DEPLOY_CLIENT_ID: ${{ vars.AZURE_DEPLOY_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       AKS_CLUSTER_NAME: ${{ vars.AKS_CLUSTER_NAME }}
@@ -866,7 +866,7 @@ jobs:
       - name: Validate required environment variables
         run: |
           missing=0
-          for v in AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID AKS_CLUSTER_NAME AKS_RESOURCE_GROUP ACR_NAME APP_AZURE_CLIENT_ID K8S_NAMESPACE; do
+          for v in AZURE_DEPLOY_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID AKS_CLUSTER_NAME AKS_RESOURCE_GROUP ACR_NAME APP_AZURE_CLIENT_ID K8S_NAMESPACE; do
             if [ -z "${!v}" ]; then
               echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
               missing=1
@@ -879,7 +879,7 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ env.AZURE_CLIENT_ID }}
+          client-id: ${{ env.AZURE_DEPLOY_CLIENT_ID }}
           tenant-id: ${{ env.AZURE_TENANT_ID }}
           subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
@@ -1125,7 +1125,7 @@ jobs:
     needs: build-event-hub-backend-service-azure
     if: ${{ github.event.inputs.cloud == 'azure' && (github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == 'backend') }}
     env:
-      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      AZURE_DEPLOY_CLIENT_ID: ${{ vars.AZURE_DEPLOY_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       AKS_CLUSTER_NAME: ${{ vars.AKS_CLUSTER_NAME }}
@@ -1141,7 +1141,7 @@ jobs:
       - name: Validate required environment variables
         run: |
           missing=0
-          for v in AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID AKS_CLUSTER_NAME AKS_RESOURCE_GROUP ACR_NAME APP_AZURE_CLIENT_ID K8S_NAMESPACE; do
+          for v in AZURE_DEPLOY_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID AKS_CLUSTER_NAME AKS_RESOURCE_GROUP ACR_NAME APP_AZURE_CLIENT_ID K8S_NAMESPACE; do
             if [ -z "${!v}" ]; then
               echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
               missing=1
@@ -1154,7 +1154,7 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ env.AZURE_CLIENT_ID }}
+          client-id: ${{ env.AZURE_DEPLOY_CLIENT_ID }}
           tenant-id: ${{ env.AZURE_TENANT_ID }}
           subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
@@ -1400,7 +1400,7 @@ jobs:
     needs: build-event-hub-site-azure
     if: ${{ github.event.inputs.cloud == 'azure' && (github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == 'site') }}
     env:
-      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      AZURE_DEPLOY_CLIENT_ID: ${{ vars.AZURE_DEPLOY_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       AKS_CLUSTER_NAME: ${{ vars.AKS_CLUSTER_NAME }}
@@ -1416,7 +1416,7 @@ jobs:
       - name: Validate required environment variables
         run: |
           missing=0
-          for v in AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID AKS_CLUSTER_NAME AKS_RESOURCE_GROUP ACR_NAME APP_AZURE_CLIENT_ID K8S_NAMESPACE; do
+          for v in AZURE_DEPLOY_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID AKS_CLUSTER_NAME AKS_RESOURCE_GROUP ACR_NAME APP_AZURE_CLIENT_ID K8S_NAMESPACE; do
             if [ -z "${!v}" ]; then
               echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
               missing=1
@@ -1429,7 +1429,7 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ env.AZURE_CLIENT_ID }}
+          client-id: ${{ env.AZURE_DEPLOY_CLIENT_ID }}
           tenant-id: ${{ env.AZURE_TENANT_ID }}
           subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
@@ -1642,7 +1642,7 @@ jobs:
     environment: prod
     if: ${{ github.event.inputs.cloud == 'azure' && (github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == 'db') }}
     env:
-      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      AZURE_DEPLOY_CLIENT_ID: ${{ vars.AZURE_DEPLOY_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       AKS_CLUSTER_NAME: ${{ vars.AKS_CLUSTER_NAME }}
@@ -1656,7 +1656,7 @@ jobs:
       - name: Validate required environment variables
         run: |
           missing=0
-          for v in AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID AKS_CLUSTER_NAME AKS_RESOURCE_GROUP K8S_NAMESPACE; do
+          for v in AZURE_DEPLOY_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID AKS_CLUSTER_NAME AKS_RESOURCE_GROUP K8S_NAMESPACE; do
             if [ -z "${!v}" ]; then
               echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
               missing=1
@@ -1669,7 +1669,7 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ env.AZURE_CLIENT_ID }}
+          client-id: ${{ env.AZURE_DEPLOY_CLIENT_ID }}
           tenant-id: ${{ env.AZURE_TENANT_ID }}
           subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 

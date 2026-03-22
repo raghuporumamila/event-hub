@@ -30,6 +30,15 @@ on:
           - pre-ci-cd
           - aks
           - both
+      azure_target:
+        description: Azure Terraform target (Azure only)
+        required: false
+        default: both
+        type: choice
+        options:
+          - pre-ci-cd
+          - aks
+          - both
       operation:
         description: Terraform operation
         required: true
@@ -172,15 +181,85 @@ jobs:
         if: ${{ github.event.inputs.operation == 'destroy' }}
         run: terraform destroy -input=false -auto-approve
 
-  terraform-azure:
-    name: Terraform Azure
+  terraform-azure-pre-ci-cd:
+    name: Terraform Azure pre-ci-cd
     runs-on: ubuntu-latest
     environment: prod
-    if: ${{ github.event.inputs.cloud == 'azure' }}
+    if: ${{ github.event.inputs.cloud == 'azure' && (github.event.inputs.azure_target == 'pre-ci-cd' || github.event.inputs.azure_target == 'both') }}
     defaults:
       run:
         shell: bash
-        working-directory: services/event-hub-infra-terraform/azure
+        working-directory: services/event-hub-infra-terraform/azure/pre-ci-cd
+    env:
+      AZURE_TERRAFORM_CLIENT_ID: ${{ vars.AZURE_TERRAFORM_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      ARM_USE_OIDC: true
+      ARM_CLIENT_ID: ${{ vars.AZURE_TERRAFORM_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required environment variables
+        run: |
+          missing=0
+          for v in AZURE_TERRAFORM_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID; do
+            if [ -z "${!v}" ]; then
+              echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ env.AZURE_TERRAFORM_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Terraform format check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform init
+        run: terraform init -input=false
+
+      - name: Terraform validate
+        run: terraform validate
+
+      - name: Terraform plan
+        run: |
+          if [ "${{ github.event.inputs.operation }}" = "destroy" ]; then
+            terraform plan -destroy -out=tfplan -input=false
+          else
+            terraform plan -out=tfplan -input=false
+          fi
+
+      - name: Terraform apply
+        if: ${{ github.event.inputs.operation == 'apply' }}
+        run: terraform apply -input=false -auto-approve tfplan
+
+      - name: Terraform destroy
+        if: ${{ github.event.inputs.operation == 'destroy' }}
+        run: terraform destroy -input=false -auto-approve
+
+  terraform-azure-aks:
+    name: Terraform Azure aks
+    runs-on: ubuntu-latest
+    environment: prod
+    if: ${{ github.event.inputs.cloud == 'azure' && (github.event.inputs.azure_target == 'aks' || github.event.inputs.azure_target == 'both') }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: services/event-hub-infra-terraform/azure/aks
     env:
       AZURE_TERRAFORM_CLIENT_ID: ${{ vars.AZURE_TERRAFORM_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}

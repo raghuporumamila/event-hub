@@ -1,27 +1,14 @@
-# Backend Resources
-resource "azurerm_resource_group" "backend" {
-  name     = "event-hub-terraform-rg"
-  location = var.location
-}
-
-resource "azurerm_storage_account" "backend" {
-  name                     = var.storage_account_name
-  resource_group_name      = azurerm_resource_group.backend.name
-  location                 = azurerm_resource_group.backend.location
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-}
-
-resource "azurerm_storage_container" "backend" {
-  name                  = "tfstate"
-  storage_account_id    = azurerm_storage_account.backend.id
-  container_access_type = "private"
+locals {
+  common_tags = {
+    Project = "event-hub"
+  }
 }
 
 # Resource Group
 resource "azurerm_resource_group" "main" {
   name     = var.resource_group_name
   location = var.location
+  tags     = local.common_tags
 }
 
 # Virtual Network
@@ -30,6 +17,7 @@ resource "azurerm_virtual_network" "main" {
   address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
+  tags                = local.common_tags
 }
 
 # Subnets
@@ -47,17 +35,28 @@ resource "azurerm_subnet" "subnet2" {
   address_prefixes     = ["10.0.11.0/24"]
 }
 
-# AKS Cluster
+# User-assigned Managed Identity for application Workload Identity
+resource "azurerm_user_assigned_identity" "app" {
+  name                = "event-hub-app-identity"
+  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.main.location
+  tags                = local.common_tags
+}
+
+# AKS Cluster with OIDC issuer and Workload Identity enabled
 resource "azurerm_kubernetes_cluster" "main" {
   name                = var.cluster_name
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
   dns_prefix          = "eventhub"
 
+  oidc_issuer_enabled       = true
+  workload_identity_enabled = true
+
   default_node_pool {
     name           = "default"
-    node_count     = 1
-    vm_size        = "Standard_D2s_v3"
+    node_count     = var.node_count
+    vm_size        = var.vm_size
     vnet_subnet_id = azurerm_subnet.subnet1.id
   }
 
@@ -70,4 +69,16 @@ resource "azurerm_kubernetes_cluster" "main" {
     service_cidr   = "10.1.0.0/16"
     dns_service_ip = "10.1.0.10"
   }
+
+  tags = local.common_tags
+}
+
+# Federated Identity Credential: bind Kubernetes service account to managed identity
+resource "azurerm_federated_identity_credential" "app" {
+  name                = "event-hub-app-federated"
+  resource_group_name = azurerm_resource_group.main.name
+  parent_id           = azurerm_user_assigned_identity.app.id
+  audience            = ["api://AzureADTokenExchange"]
+  issuer              = azurerm_kubernetes_cluster.main.oidc_issuer_url
+  subject             = "system:serviceaccount:${var.kubernetes_namespace}:${var.kubernetes_service_account_name}"
 }

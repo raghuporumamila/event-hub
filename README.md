@@ -1,18 +1,31 @@
 # Event Hub GitHub Workflows
 
-This repository includes two manually-triggered GitHub Actions workflows for managing the Event Hub multi-cloud infrastructure and application deployments.
+This repository includes six manually-triggered GitHub Actions workflows for managing Event Hub infrastructure and application deployments, split by cloud provider.
 
 ---
 
-## Workflows
+## Workflow Matrix
 
-### 1. `event-hub-multi-cloud-ci-cd.yml` — Application CI/CD
+| Goal | GCP | AWS | Azure |
+|---|---|---|---|
+| Build and deploy app services | [event-hub-ci-cd-gcp.yml](.github/workflows/event-hub-ci-cd-gcp.yml) | [event-hub-ci-cd-aws.yml](.github/workflows/event-hub-ci-cd-aws.yml) | [event-hub-ci-cd-azure.yml](.github/workflows/event-hub-ci-cd-azure.yml) |
+| Provision or destroy infrastructure | [infra-terraform-gcp.yml](.github/workflows/infra-terraform-gcp.yml) | [infra-terraform-aws.yml](.github/workflows/infra-terraform-aws.yml) | [infra-terraform-azure.yml](.github/workflows/infra-terraform-azure.yml) |
+| Target selector input | `deploy_target`, `gcp_target` | `deploy_target`, `aws_target` | `deploy_target`, `azure_target` |
+| Cloud-specific extra input | `ar_location` | `aws_region` | None |
 
-Builds and deploys Event Hub application services to Kubernetes clusters across GCP, AWS, and Azure.
+Use the Terraform workflow first for a new environment, then run the matching CI/CD workflow for the same cloud.
 
-**Trigger:** Manual (`workflow_dispatch`)
+### 1. Application CI/CD Workflows
 
-**Services:**
+The application delivery workflow is now split into one file per cloud provider:
+
+| Workflow | Cloud | Extra Inputs |
+|---|---|---|
+| [event-hub-ci-cd-gcp.yml](.github/workflows/event-hub-ci-cd-gcp.yml) | GCP | `ar_location` |
+| [event-hub-ci-cd-aws.yml](.github/workflows/event-hub-ci-cd-aws.yml) | AWS | `aws_region` |
+| [event-hub-ci-cd-azure.yml](.github/workflows/event-hub-ci-cd-azure.yml) | Azure | None |
+
+All three workflows are manually triggered with `workflow_dispatch` and support the same service targets:
 
 | Service | Description |
 |---|---|
@@ -21,26 +34,23 @@ Builds and deploys Event Hub application services to Kubernetes clusters across 
 | `site` | Event Hub frontend site |
 | `db` | Event Hub database (AlloyDB StatefulSet) |
 
-**Inputs:**
+**Shared inputs:**
 
 | Input | Required | Default | Description |
 |---|---|---|---|
-| `cloud` | Yes | `gcp` | Target cloud: `gcp`, `aws`, or `azure` |
 | `deploy_target` | Yes | `all` | Service(s) to deploy: `all`, `schema`, `backend`, `site`, or `db` |
 | `k8s_namespace` | Yes | `prod` | Kubernetes namespace for deployment |
 | `registry_repository` | Yes | `event-hub` | Container registry repository name |
-| `ar_location` | No | `us-central1` | GCP Artifact Registry location (GCP only) |
-| `aws_region` | No | `us-east-2` | AWS region (AWS only) |
 
-**How it works:**
+**How they work:**
 
-Each service follows a two-phase pipeline — build then deploy — that runs in parallel per service, gated on the selected cloud and deploy target:
+Each provider-specific workflow follows the same two-phase pipeline — build then deploy — per selected service:
 
-1. **Build phase** — Checks out the code, authenticates to the target cloud, builds the Docker image tagged with the short commit SHA, and pushes both a versioned tag and a `latest` tag to the cloud's container registry (GCP Artifact Registry, AWS ECR, or Azure ACR).
+1. **Build phase** — Checks out the code, authenticates to the cloud provider, builds the Docker image tagged with the short commit SHA, and pushes both a versioned tag and a `latest` tag to the provider registry.
 
-2. **Deploy phase** — Authenticates to the target Kubernetes cluster (GKE, EKS, or AKS), applies cloud-specific service account manifests with identity bindings, substitutes the image URI into the deployment manifest, applies it, and verifies the rollout with a 7-minute timeout. On failure, diagnostics are automatically collected (pod descriptions, logs, events).
+2. **Deploy phase** — Authenticates to the target Kubernetes cluster (GKE, EKS, or AKS), applies cloud-specific workload identity or service account manifests, substitutes the image URI into the deployment manifest, applies it, and verifies rollout. On failure, diagnostics are collected automatically.
 
-The `db` deploy job has no build phase — it applies a pre-defined StatefulSet manifest directly and monitors the AlloyDB StatefulSet rollout.
+The `db` deploy job has no build phase; it applies the StatefulSet manifest directly and monitors rollout.
 
 **Required GitHub environment variables (`prod`):**
 
@@ -52,21 +62,25 @@ The `db` deploy job has no build phase — it applies a pre-defined StatefulSet 
 
 ---
 
-### 2. `infra-terraform.yml` — Infrastructure Terraform
+### 2. Infrastructure Terraform Workflows
 
-Provisions and tears down Event Hub cloud infrastructure using Terraform, with support for phased deployments and ordered destroy sequences.
+The Terraform automation is also split into one workflow per cloud provider:
 
-**Trigger:** Manual (`workflow_dispatch`)
+| Workflow | Cloud | Target Input |
+|---|---|---|
+| [infra-terraform-gcp.yml](.github/workflows/infra-terraform-gcp.yml) | GCP | `gcp_target` |
+| [infra-terraform-aws.yml](.github/workflows/infra-terraform-aws.yml) | AWS | `aws_target` |
+| [infra-terraform-azure.yml](.github/workflows/infra-terraform-azure.yml) | Azure | `azure_target` |
 
-**Inputs:**
+Each workflow is manually triggered with `workflow_dispatch` and shares the `operation` input with values `apply` or `destroy`.
 
-| Input | Required | Default | Description |
-|---|---|---|---|
-| `cloud` | Yes | `gcp` | Target cloud: `gcp`, `aws`, or `azure` |
-| `operation` | Yes | `apply` | Terraform operation: `apply` or `destroy` |
-| `gcp_target` | No | `both` | GCP target: `pre-ci-cd`, `project-services`, `gke`, or `both` |
-| `aws_target` | No | `both` | AWS target: `pre-ci-cd`, `aks`, or `both` |
-| `azure_target` | No | `both` | Azure target: `pre-ci-cd`, `aks`, or `both` |
+**Inputs by workflow:**
+
+| Workflow | Target Values |
+|---|---|
+| [infra-terraform-gcp.yml](.github/workflows/infra-terraform-gcp.yml) | `pre-ci-cd`, `project-services`, `gke`, `both` |
+| [infra-terraform-aws.yml](.github/workflows/infra-terraform-aws.yml) | `pre-ci-cd`, `aks`, `both` |
+| [infra-terraform-azure.yml](.github/workflows/infra-terraform-azure.yml) | `pre-ci-cd`, `aks`, `both` |
 
 **Terraform modules and execution order:**
 
@@ -90,7 +104,7 @@ pre-ci-cd → aks (AKS)
 ```
 The `pre-ci-cd` module creates the Terraform backend resource group and storage account. The `aks` module provisions the AKS cluster and verifies the backend storage account exists before proceeding.
 
-When `operation` is `destroy` and the target is `both`, the workflow automatically runs an additional cleanup job to destroy `pre-ci-cd` resources after the dependent modules have been torn down.
+When `operation` is `destroy` and the target is `both`, each provider workflow automatically runs additional cleanup jobs to destroy `pre-ci-cd` resources after dependent modules are torn down.
 
 Each module job runs `fmt -check`, `init`, `validate`, and `plan` before applying or destroying. Plans are saved to `tfplan` and applied in a separate step.
 
@@ -118,6 +132,39 @@ No long-lived secrets or service account keys are stored in GitHub.
 
 ## Running the Workflows
 
-Both workflows are triggered manually from the **Actions** tab in GitHub. Select the workflow, click **Run workflow**, fill in the inputs, and click the green **Run workflow** button.
+All workflows are triggered manually from the **Actions** tab in GitHub. Select the cloud-specific workflow, click **Run workflow**, fill in the inputs, and start the run.
 
-For a first-time cloud setup, run the Terraform workflow before the CI/CD workflow to ensure the cluster and registry infrastructure exists.
+For a first-time cloud setup, run the cloud-specific Terraform workflow before the corresponding CI/CD workflow to ensure the cluster and registry infrastructure exist.
+
+## Examples
+
+### 1. GCP first-time environment setup
+
+1. Run [infra-terraform-gcp.yml](.github/workflows/infra-terraform-gcp.yml)
+2. Set `gcp_target` to `both`
+3. Set `operation` to `apply`
+4. After infrastructure completes, run [event-hub-ci-cd-gcp.yml](.github/workflows/event-hub-ci-cd-gcp.yml)
+5. Set `deploy_target` to `all`
+6. Set `k8s_namespace` to `prod`
+7. Set `registry_repository` to `event-hub`
+8. Set `ar_location` to your Artifact Registry region, for example `us-central1`
+
+### 2. AWS application-only deploy
+
+Use this when AWS infrastructure already exists and you only want to roll out application changes.
+
+1. Run [event-hub-ci-cd-aws.yml](.github/workflows/event-hub-ci-cd-aws.yml)
+2. Set `deploy_target` to `schema`, `backend`, `site`, or `all`
+3. Set `k8s_namespace` to the target namespace
+4. Set `registry_repository` to the ECR repository name
+5. Set `aws_region` to the target AWS region, for example `us-east-2`
+
+### 3. Azure full destroy sequence
+
+Use this when you want GitHub Actions to tear down Azure infrastructure in dependency order.
+
+1. Run [infra-terraform-azure.yml](.github/workflows/infra-terraform-azure.yml)
+2. Set `azure_target` to `both`
+3. Set `operation` to `destroy`
+4. The workflow will destroy the AKS layer first
+5. After that, it will automatically destroy the `pre-ci-cd` layer

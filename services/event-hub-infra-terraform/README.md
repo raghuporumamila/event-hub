@@ -40,6 +40,18 @@ This repository contains Terraform configurations to provision and manage Event 
 
 The project uses **GitHub Actions** as the CI/CD platform and authenticates to each cloud provider via **keyless OIDC federation**, eliminating the need to store long-lived credentials as GitHub secrets.
 
+### GitHub Workflow Equivalents
+
+If you want to run the same infrastructure operations through GitHub Actions instead of locally, use the cloud-specific workflow files in `.github/workflows/`:
+
+| Cloud | Workflow File | Target Input |
+|-------|---------------|--------------|
+| AWS | `infra-terraform-aws.yml` | `aws_target` |
+| Azure | `infra-terraform-azure.yml` | `azure_target` |
+| GCP | `infra-terraform-gcp.yml` | `gcp_target` |
+
+These workflows mirror the same module order documented below and support both `apply` and `destroy` operations.
+
 ---
 
 ## Repository Structure

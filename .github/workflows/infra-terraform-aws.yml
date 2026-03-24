@@ -1,0 +1,219 @@
+name: Event Hub AWS Infra Terraform
+
+on:
+  workflow_dispatch:
+    inputs:
+      aws_target:
+        description: AWS Terraform target
+        required: false
+        default: both
+        type: choice
+        options:
+          - pre-ci-cd
+          - aks
+          - both
+      operation:
+        description: Terraform operation
+        required: true
+        default: apply
+        type: choice
+        options:
+          - apply
+          - destroy
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  terraform-aws-pre-ci-cd:
+    name: Terraform AWS pre-ci-cd
+    runs-on: ubuntu-latest
+    environment: prod
+    if: ${{ github.event.inputs.aws_target == 'pre-ci-cd' || github.event.inputs.aws_target == 'both' }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: services/event-hub-infra-terraform/aws/pre-ci-cd
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      AWS_TERRAFORM_ROLE_ARN: ${{ vars.AWS_TERRAFORM_ROLE_ARN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required environment variables
+        run: |
+          missing=0
+          for v in AWS_REGION AWS_TERRAFORM_ROLE_ARN; do
+            if [ -z "${!v}" ]; then
+              echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ env.AWS_TERRAFORM_ROLE_ARN }}
+
+      - name: Terraform format check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform init
+        run: terraform init -input=false
+
+      - name: Terraform validate
+        run: terraform validate
+
+      - name: Terraform plan
+        run: |
+          if [ "${{ github.event.inputs.operation }}" = "destroy" ]; then
+            terraform plan -destroy -out=tfplan -input=false
+          else
+            terraform plan -out=tfplan -input=false
+          fi
+
+      - name: Terraform apply
+        if: ${{ github.event.inputs.operation == 'apply' }}
+        run: terraform apply -input=false -auto-approve tfplan
+
+      - name: Terraform destroy
+        if: ${{ github.event.inputs.operation == 'destroy' && github.event.inputs.aws_target != 'both' }}
+        run: terraform destroy -input=false -auto-approve
+
+  terraform-aws-aks:
+    name: Terraform AWS aks
+    runs-on: ubuntu-latest
+    environment: prod
+    needs: terraform-aws-pre-ci-cd
+    if: ${{ (github.event.inputs.aws_target == 'aks' || github.event.inputs.aws_target == 'both') && (needs.terraform-aws-pre-ci-cd.result == 'success' || needs.terraform-aws-pre-ci-cd.result == 'skipped') }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: services/event-hub-infra-terraform/aws/aks
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      AWS_TERRAFORM_ROLE_ARN: ${{ vars.AWS_TERRAFORM_ROLE_ARN }}
+      AWS_CICD_ROLE_NAME: ${{ vars.AWS_CICD_ROLE_NAME }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required environment variables
+        run: |
+          missing=0
+          for v in AWS_REGION AWS_TERRAFORM_ROLE_ARN; do
+            if [ -z "${!v}" ]; then
+              echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ env.AWS_TERRAFORM_ROLE_ARN }}
+
+      - name: Verify prerequisite CI/CD IAM role exists
+        run: |
+          set -euo pipefail
+          ROLE_NAME="${AWS_CICD_ROLE_NAME:-event-hub-github-cicd-role}"
+          if ! aws iam get-role --role-name "${ROLE_NAME}" >/dev/null 2>&1; then
+            echo "::error::Missing prerequisite IAM role '${ROLE_NAME}'. Run Terraform target 'pre-ci-cd' first, or set GitHub variable AWS_CICD_ROLE_NAME to the correct role name."
+            exit 1
+          fi
+          echo "Found prerequisite IAM role: ${ROLE_NAME}"
+
+      - name: Terraform format check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform init
+        run: terraform init -input=false
+
+      - name: Terraform validate
+        run: terraform validate
+
+      - name: Terraform plan
+        run: |
+          if [ "${{ github.event.inputs.operation }}" = "destroy" ]; then
+            terraform plan -destroy -out=tfplan -input=false
+          else
+            terraform plan -out=tfplan -input=false
+          fi
+
+      - name: Terraform apply
+        if: ${{ github.event.inputs.operation == 'apply' }}
+        run: terraform apply -input=false -auto-approve tfplan
+
+      - name: Terraform destroy
+        if: ${{ github.event.inputs.operation == 'destroy' }}
+        run: terraform destroy -input=false -auto-approve
+
+  terraform-aws-pre-ci-cd-destroy-after-aks:
+    name: Terraform AWS pre-ci-cd destroy (after aks)
+    runs-on: ubuntu-latest
+    environment: prod
+    needs: terraform-aws-aks
+    if: ${{ github.event.inputs.aws_target == 'both' && github.event.inputs.operation == 'destroy' && needs.terraform-aws-aks.result == 'success' }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: services/event-hub-infra-terraform/aws/pre-ci-cd
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      AWS_TERRAFORM_ROLE_ARN: ${{ vars.AWS_TERRAFORM_ROLE_ARN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required environment variables
+        run: |
+          missing=0
+          for v in AWS_REGION AWS_TERRAFORM_ROLE_ARN; do
+            if [ -z "${!v}" ]; then
+              echo "::error::Missing required GitHub environment variable '$v' in environment 'prod'."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ env.AWS_TERRAFORM_ROLE_ARN }}
+
+      - name: Terraform format check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform init
+        run: terraform init -input=false
+
+      - name: Terraform validate
+        run: terraform validate
+
+      - name: Terraform destroy
+        run: terraform destroy -input=false -auto-approve

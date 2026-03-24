@@ -91,7 +91,7 @@ Each module contains the standard Terraform files:
 ### AWS
 
 - AWS CLI configured with credentials that have sufficient IAM permissions
-- An S3 bucket named `event-hub-terraform-prod` in `us-east-2` must exist before running `aws/aks` (the `aws/pre-ci-cd` module does not create it)
+- An S3 bucket named `event-hub-terraform-prod` in `us-east-2` must exist before running `aws/eks` (the `aws/pre-ci-cd` module does not create it)
 
 ### Azure
 
@@ -127,10 +127,10 @@ After apply, configure the following GitHub Actions environment variables from t
 | `github_cicd_role_arn` | `AWS_DEPLOY_ROLE_ARN` |
 | `ecr_repository_url` | `AWS_ECR_REPOSITORY_URL` |
 
-#### Step 2 — Cluster (`aks`)
+#### Step 2 — Cluster (`eks`)
 
 ```bash
-cd ../aks
+cd ../eks
 terraform init
 terraform apply
 ```
@@ -300,7 +300,7 @@ GCP uses **GKE Autopilot** with Workload Identity. The application service accou
 
 ## Key Variables Reference
 
-### AWS — `aws/aks/variables.tf`
+### AWS — `aws/eks/variables.tf`
 
 | Variable | Default | Description |
 |----------|---------|-------------|

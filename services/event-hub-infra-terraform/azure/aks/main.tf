@@ -73,6 +73,19 @@ resource "azurerm_kubernetes_cluster" "main" {
   tags = local.common_tags
 }
 
+# ACR - created by pre-ci-cd stack, referenced here to grant AKS pull access
+data "azurerm_container_registry" "event_hub" {
+  name                = "eventhubacrprod"
+  resource_group_name = "event-hub-acr-rg"
+}
+
+# Grant AKS kubelet identity AcrPull so nodes can pull images at runtime
+resource "azurerm_role_assignment" "aks_acr_pull" {
+  scope                = data.azurerm_container_registry.event_hub.id
+  role_definition_name = "AcrPull"
+  principal_id         = azurerm_kubernetes_cluster.main.kubelet_identity[0].object_id
+}
+
 # Federated Identity Credential: bind Kubernetes service account to managed identity
 resource "azurerm_federated_identity_credential" "app" {
   name                = "event-hub-app-federated"

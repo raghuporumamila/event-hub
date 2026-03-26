@@ -272,7 +272,7 @@ jobs:
           subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
       - name: Configure kubectl for AKS
-        run: az aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --overwrite-existing
+        run: az aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --overwrite-existing --admin
 
       - name: Show kubectl context
         run: |
@@ -287,7 +287,7 @@ jobs:
         run: |
           set -euo pipefail
           ACR_LOGIN_SERVER="$(az acr show --name ${ACR_NAME} --query loginServer -o tsv)"
-          IMAGE_URI="${ACR_LOGIN_SERVER}/$(cut -d';' -f1 <<< '${{ needs.build-event-hub-schema-azure.outputs.image_uri }}')"
+          IMAGE_URI="${ACR_LOGIN_SERVER}/$(cut -d';' -f1 <<< '${{ needs.build-event-hub-schema-azure.outputs.image_uri }}')"}
           IMAGE_URI="${{ needs.build-event-hub-schema-azure.outputs.image_uri }}"
 
           sed \
@@ -365,7 +365,7 @@ jobs:
           subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
       - name: Configure kubectl for AKS
-        run: az aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --overwrite-existing
+        run: az aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --overwrite-existing --admin
 
       - name: Show kubectl context
         run: |
@@ -456,7 +456,7 @@ jobs:
           subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
       - name: Configure kubectl for AKS
-        run: az aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --overwrite-existing
+        run: az aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --overwrite-existing --admin
 
       - name: Show kubectl context
         run: |
@@ -545,7 +545,7 @@ jobs:
           subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
       - name: Configure kubectl for AKS
-        run: az aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --overwrite-existing
+        run: az aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --overwrite-existing --admin
 
       - name: Show kubectl context
         run: |

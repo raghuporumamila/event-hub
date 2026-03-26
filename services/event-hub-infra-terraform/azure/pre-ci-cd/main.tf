@@ -110,6 +110,13 @@ resource "azurerm_role_assignment" "cicd_acr_push" {
   principal_id         = azuread_service_principal.github_cicd.object_id
 }
 
+# Grant CI/CD SP Reader role on the container registry for management-plane lookups
+resource "azurerm_role_assignment" "cicd_acr_reader" {
+  scope                = azurerm_container_registry.event_hub.id
+  role_definition_name = "Reader"
+  principal_id         = azuread_service_principal.github_cicd.object_id
+}
+
 # Grant CI/CD SP AKS Cluster Admin role on the subscription
 # Cluster Admin (not just User) is required for kubectl apply during deployments
 resource "azurerm_role_assignment" "cicd_aks_admin" {

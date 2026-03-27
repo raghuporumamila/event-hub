@@ -41,6 +41,12 @@ variable "cicd_role_name" {
   default     = "event-hub-github-cicd-role"
 }
 
+variable "terraform_admin_role_name" {
+  description = "IAM role name used by Terraform executions that should retain EKS admin access"
+  type        = string
+  default     = "event-hub-terraform-role"
+}
+
 variable "app_iam_role_name" {
   description = "IAM role name used by the application Kubernetes service account"
   type        = string

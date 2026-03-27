@@ -8,6 +8,10 @@ data "aws_iam_role" "github_cicd" {
   name = var.cicd_role_name
 }
 
+data "aws_iam_role" "terraform_admin" {
+  name = var.terraform_admin_role_name
+}
+
 locals {
   eks_oidc_issuer_host = trimprefix(module.eks.cluster_oidc_issuer_url, "https://")
   common_tags = {
@@ -109,7 +113,7 @@ module "eks" {
 
   cluster_endpoint_private_access          = true
   cluster_endpoint_public_access           = true
-  enable_cluster_creator_admin_permissions = true
+  enable_cluster_creator_admin_permissions = false
 
   # KMS encryption: uses customer-managed key if provided, otherwise disables encryption
   # To enable module-managed KMS key creation, add IAM permissions: kms:CreateKey, kms:TagResource, kms:PutKeyPolicy, kms:CreateAlias
@@ -137,6 +141,19 @@ module "eks" {
   }
 
   access_entries = {
+    cluster_creator = {
+      principal_arn = data.aws_iam_role.terraform_admin.arn
+
+      policy_associations = {
+        admin = {
+          policy_arn = "arn:${data.aws_partition.current.partition}:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          access_scope = {
+            type = "cluster"
+          }
+        }
+      }
+    }
+
     github_cicd = {
       principal_arn = data.aws_iam_role.github_cicd.arn
 

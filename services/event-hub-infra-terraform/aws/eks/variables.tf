@@ -79,7 +79,7 @@ variable "event_queue_name" {
 variable "node_group_instance_types" {
   description = "Instance types for the EKS managed node group"
   type        = list(string)
-  default     = ["t3.medium", "t3.large", "m5.large"]
+  default     = ["t3.small", "t2.small"]
 }
 
 variable "node_group_desired_size" {

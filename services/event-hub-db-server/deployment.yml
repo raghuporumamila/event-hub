@@ -314,6 +314,16 @@ spec:
         app: alloydb
         tier: database
     spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - us-east-2c
       containers:
         - name: alloydb
           image: google/alloydbomni:17.5.0
@@ -332,26 +342,19 @@ spec:
             - name: DATA_DIR
               value: /var/lib/postgresql/data/pgdata
           resources:
-            # Fit current free-tier EKS nodes (~1.4Gi allocatable memory each).
             requests:
               cpu: "500m"
-              memory: "1Gi"
+              memory: "1200Mi"
             limits:
               cpu: "1000m"
               memory: "1500Mi"
           volumeMounts:
             - name: data
               mountPath: /var/lib/postgresql/data
-            - name: dshm
-              mountPath: /dev/shm
             - name: init-sql
               mountPath: /docker-entrypoint-initdb.d
               readOnly: true
       volumes:
-        - name: dshm
-          emptyDir:
-            medium: Memory
-            sizeLimit: 512Mi
         - name: init-sql
           configMap:
             name: alloydb-init-sql
@@ -379,6 +382,26 @@ metadata:
     tier: database
 spec:
   clusterIP: None
+  publishNotReadyAddresses: true
+  selector:
+    app: alloydb
+    tier: database
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+      protocol: TCP
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alloydb-svc
+  namespace: prod
+  labels:
+    app: alloydb
+    tier: database
+spec:
   selector:
     app: alloydb
     tier: database

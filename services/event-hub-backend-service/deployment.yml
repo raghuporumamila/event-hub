@@ -26,7 +26,7 @@ spec:
           imagePullPolicy: Always
           env:
             - name: SPRING_DATASOURCE_URL
-              value: jdbc:postgresql://alloydb:5432/eventhub
+              value: jdbc:postgresql://alloydb-svc:5432/eventhub
             - name: SPRING_DATASOURCE_USERNAME
               value: postgres
             - name: SPRING_DATASOURCE_PASSWORD

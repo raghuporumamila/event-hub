@@ -111,6 +111,16 @@ module "eks" {
   cluster_endpoint_public_access           = true
   enable_cluster_creator_admin_permissions = true
 
+  # KMS encryption: uses customer-managed key if provided, otherwise disables encryption
+  # To enable module-managed KMS key creation, add IAM permissions: kms:CreateKey, kms:TagResource, kms:PutKeyPolicy, kms:CreateAlias
+  create_kms_key            = false
+  cluster_encryption_config = {}
+
+  # CloudWatch Logs: disabled by default due to restricted IAM. Set create_cloudwatch_log_group=true after adding logs:CreateLogGroup permission.
+  create_cloudwatch_log_group            = false
+  cloudwatch_log_group_retention_in_days = var.cluster_log_retention_days
+  cloudwatch_log_group_kms_key_id        = var.kms_key_arn != "" ? var.kms_key_arn : null
+
   vpc_id     = aws_vpc.main.id
   subnet_ids = [aws_subnet.subnet1.id, aws_subnet.subnet2.id, aws_subnet.subnet3.id]
 

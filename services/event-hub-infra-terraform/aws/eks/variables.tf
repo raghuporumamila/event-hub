@@ -99,3 +99,27 @@ variable "node_group_max_size" {
   type        = number
   default     = 3
 }
+
+variable "enable_cluster_logging" {
+  description = "Enable EKS cluster logging to CloudWatch"
+  type        = bool
+  default     = true
+}
+
+variable "cluster_log_types" {
+  description = "List of EKS cluster log types to enable (api, audit, authenticator, controllerManager, scheduler)"
+  type        = list(string)
+  default     = ["api", "audit"]
+}
+
+variable "cluster_log_retention_days" {
+  description = "CloudWatch log group retention in days"
+  type        = number
+  default     = 7
+}
+
+variable "kms_key_arn" {
+  description = "ARN of customer-managed KMS key for EKS cluster encryption. If not provided, cluster encryption will be disabled until IAM permissions allow module-managed key creation."
+  type        = string
+  default     = ""
+}

@@ -6,6 +6,7 @@ CREATE TABLE "security".workspace (
 );
 
 ALTER TABLE "security".workspace ADD CONSTRAINT fkk4q3bjw51dov0jcxo2ngtorfr FOREIGN KEY (organization_id) REFERENCES "security".organization(id);
+ALTER TABLE "security"."user" ADD CONSTRAINT "FK47s23cxhafnkyhcnfgpwg9qeq" FOREIGN KEY (default_workspace_id) REFERENCES "security".workspace(id);
 
 INSERT INTO "security".workspace (name,organization_id) VALUES
 	 ('Dev',1);

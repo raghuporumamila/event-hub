@@ -1,3 +1,4 @@
 CREATE DATABASE eventhub;
+\connect eventhub;
 CREATE SCHEMA IF NOT EXISTS security;
 CREATE SCHEMA IF NOT EXISTS event;

@@ -8,7 +8,6 @@ CREATE TABLE "security"."user" (
 	"password" varchar(255) NULL,
 	CONSTRAINT user_pkey PRIMARY KEY (id)
 );
-ALTER TABLE "security"."user" ADD CONSTRAINT "FK47s23cxhafnkyhcnfgpwg9qeq" FOREIGN KEY (default_workspace_id) REFERENCES "security".workspace(id);
 ALTER TABLE "security"."user" ADD CONSTRAINT "FK9usot4gododq1u90duvulb92d" FOREIGN KEY (role_id) REFERENCES "security"."role"(id);
 ALTER TABLE "security"."user" ADD CONSTRAINT "FKdoir9r27qpdmycnkpamjawo4e" FOREIGN KEY (organization_id) REFERENCES "security".organization(id);
 

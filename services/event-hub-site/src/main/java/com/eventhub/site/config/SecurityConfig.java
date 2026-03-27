@@ -19,7 +19,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/site/v1/**").hasAnyRole("OrgUser", "OrgAdmin", "SuperUser")
                         .requestMatchers("/site/security/v1", "/css/**", "/images/**", "/js/**",
-                                "/countryAndStates.json","/localLogin.html", "/", "/genAIChat").permitAll()
+                                "/countryAndStates.json","/localLogin.html", "/", "/genAIChat",
+                                "/login", "/login/**", "/error").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form

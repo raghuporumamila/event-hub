@@ -556,8 +556,36 @@ jobs:
 
       - name: Apply DB manifest
         run: |
+          set -euo pipefail
+          RENDERED_MANIFEST="$(mktemp)"
           sed -e "s|namespace: prod|namespace: ${K8S_NAMESPACE}|g" \
-            services/event-hub-db-server/deployment.yml | kubectl apply -f -
+            services/event-hub-db-server/deployment.yml > "${RENDERED_MANIFEST}"
+
+          set +e
+          APPLY_OUTPUT="$(kubectl apply -f "${RENDERED_MANIFEST}" 2>&1)"
+          APPLY_RC=$?
+          set -e
+          echo "${APPLY_OUTPUT}"
+
+          if [ ${APPLY_RC} -ne 0 ]; then
+            if echo "${APPLY_OUTPUT}" | grep -q "The StatefulSet \"alloydb\" is invalid: spec: Forbidden"; then
+              echo "Detected immutable StatefulSet spec change. Recreating StatefulSet alloydb."
+              kubectl delete statefulset alloydb -n ${K8S_NAMESPACE} --ignore-not-found --wait=true
+
+              if kubectl get pvc data-alloydb-0 -n ${K8S_NAMESPACE} >/dev/null 2>&1; then
+                PVC_PHASE="$(kubectl get pvc data-alloydb-0 -n ${K8S_NAMESPACE} -o jsonpath='{.status.phase}')"
+                PVC_SC="$(kubectl get pvc data-alloydb-0 -n ${K8S_NAMESPACE} -o jsonpath='{.spec.storageClassName}')"
+                if [ "${PVC_PHASE}" = "Pending" ]; then
+                  echo "Deleting Pending PVC data-alloydb-0 (storageClass=${PVC_SC}) so it can be recreated with the current template."
+                  kubectl delete pvc data-alloydb-0 -n ${K8S_NAMESPACE}
+                fi
+              fi
+
+              kubectl apply -f "${RENDERED_MANIFEST}"
+            else
+              exit ${APPLY_RC}
+            fi
+          fi
 
       - name: Verify StatefulSet rollout
         run: |

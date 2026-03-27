@@ -14,7 +14,7 @@ on:
         default: event-hub
         type: string
       k8s_namespace:
-        description: Kubernetes namespace for deployment
+        description: Existing Kubernetes namespace for deployment (must be pre-created)
         required: true
         default: prod
         type: string
@@ -274,7 +274,11 @@ jobs:
           kubectl cluster-info
 
       - name: Ensure namespace exists
-        run: kubectl get namespace ${K8S_NAMESPACE} >/dev/null 2>&1 || kubectl create namespace ${K8S_NAMESPACE}
+        run: |
+          if ! kubectl get namespace ${K8S_NAMESPACE} >/dev/null 2>&1; then
+            echo "::error::Namespace '${K8S_NAMESPACE}' does not exist. Create it beforehand or set a valid existing namespace."
+            exit 1
+          fi
 
       - name: Apply service account and deployment manifest
         run: |
@@ -362,7 +366,11 @@ jobs:
           kubectl cluster-info
 
       - name: Ensure namespace exists
-        run: kubectl get namespace ${K8S_NAMESPACE} >/dev/null 2>&1 || kubectl create namespace ${K8S_NAMESPACE}
+        run: |
+          if ! kubectl get namespace ${K8S_NAMESPACE} >/dev/null 2>&1; then
+            echo "::error::Namespace '${K8S_NAMESPACE}' does not exist. Create it beforehand or set a valid existing namespace."
+            exit 1
+          fi
 
       - name: Apply service account and deployment manifest
         run: |
@@ -450,7 +458,11 @@ jobs:
           kubectl cluster-info
 
       - name: Ensure namespace exists
-        run: kubectl get namespace ${K8S_NAMESPACE} >/dev/null 2>&1 || kubectl create namespace ${K8S_NAMESPACE}
+        run: |
+          if ! kubectl get namespace ${K8S_NAMESPACE} >/dev/null 2>&1; then
+            echo "::error::Namespace '${K8S_NAMESPACE}' does not exist. Create it beforehand or set a valid existing namespace."
+            exit 1
+          fi
 
       - name: Apply service account and deployment manifest
         run: |
@@ -536,7 +548,11 @@ jobs:
           kubectl cluster-info
 
       - name: Ensure namespace exists
-        run: kubectl get namespace ${K8S_NAMESPACE} >/dev/null 2>&1 || kubectl create namespace ${K8S_NAMESPACE}
+        run: |
+          if ! kubectl get namespace ${K8S_NAMESPACE} >/dev/null 2>&1; then
+            echo "::error::Namespace '${K8S_NAMESPACE}' does not exist. Create it beforehand or set a valid existing namespace."
+            exit 1
+          fi
 
       - name: Apply DB manifest
         run: |

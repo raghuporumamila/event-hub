@@ -186,6 +186,30 @@ resource "kubernetes_namespace_v1" "app" {
     }
   }
 
+  timeouts {
+    delete = "5m"
+  }
+
+  depends_on = [module.eks]
+}
+
+# Cleans up all workloads in the namespace before Terraform destroys it,
+# preventing the namespace from getting stuck in Terminating state.
+resource "null_resource" "drain_namespace" {
+  triggers = {
+    namespace = var.kubernetes_namespace
+    cluster   = module.eks.cluster_name
+    region    = var.region
+  }
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = <<-EOT
+      kubectl delete all,pvc --all -n ${self.triggers.namespace} --force --grace-period=0 --ignore-not-found || true
+      kubectl patch namespace ${self.triggers.namespace} -p '{"spec":{"finalizers":[]}}' --type=merge || true
+    EOT
+  }
+
   depends_on = [module.eks]
 }
 

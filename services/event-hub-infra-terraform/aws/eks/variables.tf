@@ -9,6 +9,12 @@ variable "cluster_name" {
   type        = string
 }
 
+variable "cluster_version" {
+  description = "Kubernetes version for the EKS control plane"
+  type        = string
+  default     = "1.31"
+}
+
 variable "vpc_name" {
   description = "The name of the VPC"
   type        = string
@@ -73,7 +79,7 @@ variable "event_queue_name" {
 variable "node_group_instance_types" {
   description = "Instance types for the EKS managed node group"
   type        = list(string)
-  default     = ["t3.medium"]
+  default     = ["t3.medium", "t3.large", "m5.large"]
 }
 
 variable "node_group_desired_size" {

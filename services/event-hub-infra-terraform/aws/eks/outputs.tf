@@ -1,15 +1,15 @@
 output "kubernetes_cluster_name" {
-  value       = aws_eks_cluster.main.name
+  value       = module.eks.cluster_name
   description = "EKS Cluster Name"
 }
 
 output "kubernetes_cluster_endpoint" {
-  value       = aws_eks_cluster.main.endpoint
+  value       = module.eks.cluster_endpoint
   description = "EKS Cluster Endpoint"
 }
 
 output "workload_identity_provider_arn" {
-  value       = aws_iam_openid_connect_provider.eks.arn
+  value       = module.eks.oidc_provider_arn
   description = "OIDC provider ARN used for IAM roles for service accounts"
 }
 

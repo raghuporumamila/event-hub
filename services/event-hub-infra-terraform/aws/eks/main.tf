@@ -177,6 +177,18 @@ module "eks" {
   ]
 }
 
+resource "kubernetes_namespace_v1" "app" {
+  metadata {
+    name = var.kubernetes_namespace
+
+    labels = {
+      project = "event-hub"
+    }
+  }
+
+  depends_on = [module.eks]
+}
+
 resource "aws_s3_bucket" "app_storage" {
   bucket = var.app_bucket_name
 

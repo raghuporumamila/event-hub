@@ -103,6 +103,13 @@ resource "azurerm_role_assignment" "terraform_contributor" {
   principal_id         = azuread_service_principal.terraform.object_id
 }
 
+# Grant Terraform SP permission to manage Azure RBAC assignments created by downstream stacks
+resource "azurerm_role_assignment" "terraform_user_access_administrator" {
+  scope                = data.azurerm_subscription.current.id
+  role_definition_name = "User Access Administrator"
+  principal_id         = azuread_service_principal.terraform.object_id
+}
+
 # Grant CI/CD SP AcrPush role on the container registry
 resource "azurerm_role_assignment" "cicd_acr_push" {
   scope                = azurerm_container_registry.event_hub.id

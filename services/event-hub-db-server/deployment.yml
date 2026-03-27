@@ -315,8 +315,8 @@ spec:
     spec:
       containers:
         - name: alloydb
-          image: google/alloydbomni:latest
-          imagePullPolicy: Always
+          image: google/alloydbomni:17.5.0
+          imagePullPolicy: IfNotPresent
           ports:
             - name: postgres
               containerPort: 5432
@@ -331,12 +331,13 @@ spec:
             - name: DATA_DIR
               value: /var/lib/postgresql/data/pgdata
           resources:
+            # Fit current free-tier EKS nodes (~1.4Gi allocatable memory each).
             requests:
-              cpu: "1000m"
-              memory: "4Gi"
+              cpu: "500m"
+              memory: "1Gi"
             limits:
-              cpu: "2000m"
-              memory: "8Gi"
+              cpu: "1000m"
+              memory: "1500Mi"
           volumeMounts:
             - name: data
               mountPath: /var/lib/postgresql/data
@@ -349,7 +350,7 @@ spec:
         - name: dshm
           emptyDir:
             medium: Memory
-            sizeLimit: 2Gi
+            sizeLimit: 512Mi
         - name: init-sql
           configMap:
             name: alloydb-init-sql

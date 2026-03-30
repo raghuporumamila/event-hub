@@ -2,6 +2,10 @@
 
 This repository includes six manually-triggered GitHub Actions workflows for managing Event Hub infrastructure and application deployments, split by cloud provider.
 
+## Local Development Scripts
+
+For running services locally in Codespaces, see [scripts/Readme.md](scripts/Readme.md).
+
 ---
 
 ## Workflow Matrix

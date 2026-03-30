@@ -6,10 +6,17 @@ CREATE TABLE "security"."user" (
 	organization_id int8 NULL,
 	role_id int8 NULL,
 	"password" varchar(255) NULL,
-	CONSTRAINT user_pkey PRIMARY KEY (id)
+	CONSTRAINT user_pkey PRIMARY KEY (id),
+	CONSTRAINT uq_user_email UNIQUE (email)
 );
 ALTER TABLE "security"."user" ADD CONSTRAINT "FK9usot4gododq1u90duvulb92d" FOREIGN KEY (role_id) REFERENCES "security"."role"(id);
 ALTER TABLE "security"."user" ADD CONSTRAINT "FKdoir9r27qpdmycnkpamjawo4e" FOREIGN KEY (organization_id) REFERENCES "security".organization(id);
 
 INSERT INTO "security"."user" (email,"name",default_workspace_id,organization_id,role_id,"password") VALUES
-	 ('raghu.porumamilla@gmail.com','Raghu Porumamilla',1,1,1,'$2a$10$FXqs6EVGQ.F14teFQuoEHe30QnhyPcK0cWF2P5vWlhRrmJ9I1kDUq');
+	 ('raghu.porumamilla@gmail.com','Raghu Porumamilla',1,1,1,'$2a$10$FXqs6EVGQ.F14teFQuoEHe30QnhyPcK0cWF2P5vWlhRrmJ9I1kDUq')
+ON CONFLICT (email) DO UPDATE SET
+	"name" = EXCLUDED."name",
+	default_workspace_id = EXCLUDED.default_workspace_id,
+	organization_id = EXCLUDED.organization_id,
+	role_id = EXCLUDED.role_id,
+	"password" = EXCLUDED."password";

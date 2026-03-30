@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.eventhub.dao.repository.BaseRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -19,8 +20,7 @@ import com.google.cloud.firestore.WriteResult;
 
 @Component(value="userRepository")
 public interface UserRepository extends ListCrudRepository<User, Long> {
-	@Query("SELECT d FROM User d WHERE d.email = :email")
-	User findByEmail(String email);
+	Optional<User> findFirstByEmailOrderByIdDesc(String email);
 	@Query("SELECT d FROM User d WHERE d.organization = :orgId")
 	List<User> findAllByOrgId(String orgId);
 	/*

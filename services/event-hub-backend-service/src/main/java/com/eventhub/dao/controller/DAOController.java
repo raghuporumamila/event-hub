@@ -62,7 +62,7 @@ public class DAOController {
 	
 	@RequestMapping(value="/users", method=RequestMethod.GET)
 	public User getUser(@RequestParam(name="email") String email) throws Exception {
-		return userRepository.findByEmail(email);
+		return userRepository.findFirstByEmailOrderByIdDesc(email).orElse(null);
 	}
 	
 	//Target related methodsx

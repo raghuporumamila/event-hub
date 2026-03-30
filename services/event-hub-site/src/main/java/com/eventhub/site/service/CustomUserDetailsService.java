@@ -25,6 +25,10 @@ public class CustomUserDetailsService implements UserDetailsService {
                 new ParameterizedTypeReference<User>() {
                 }).getBody();
 
+        if (siteUser == null) {
+            throw new UsernameNotFoundException("User not found for email: " + email);
+        }
+
          return org.springframework.security.core.userdetails.User
                 .withUsername(siteUser.getEmail())
                 .password(siteUser.getPassword())

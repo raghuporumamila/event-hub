@@ -18,6 +18,15 @@ RESEED_DB=0
 FORCE_YES=0
 ALLOYDB_CONTAINER="alloydb-omni"
 
+SITE_PORT="${SITE_PORT:-8080}"
+BACKEND_PORT="${BACKEND_PORT:-8081}"
+SCHEMA_PORT="${SCHEMA_PORT:-8082}"
+PUBLISHER_PORT="${PUBLISHER_PORT:-8083}"
+
+DAO_API_ENDPOINT="${DAO_API_ENDPOINT:-http://localhost:${BACKEND_PORT}}"
+SCHEMA_API_ENDPOINT="${SCHEMA_API_ENDPOINT:-http://localhost:${SCHEMA_PORT}}"
+PUBLISHER_API_ENDPOINT="${PUBLISHER_API_ENDPOINT:-http://localhost:${PUBLISHER_PORT}}"
+
 usage() {
   cat <<EOF
 Usage: $(basename "$0") [--seed-db] [--reseed-db] [--yes]
@@ -84,6 +93,14 @@ if [[ -f "$PID_FILE" ]]; then
   exit 1
 fi
 
+for port in "$SITE_PORT" "$BACKEND_PORT" "$SCHEMA_PORT" "$PUBLISHER_PORT"; do
+  pids=$(lsof -ti ":$port" 2>/dev/null || true)
+  if [[ -n "$pids" ]]; then
+    echo "Port $port is already in use (PIDs: $pids). Killing..."
+    echo "$pids" | xargs kill -9 2>/dev/null || true
+  fi
+done
+
 cat > "$PID_FILE" <<'EOF'
 EOF
 
@@ -140,6 +157,26 @@ seed_db() {
     "$DB_DIR/sql/9_event.sql"; do
     docker exec -i "$ALLOYDB_CONTAINER" psql -U postgres -d eventhub < "$sql_file"
   done
+
+  # Keep the latest row per email and enforce uniqueness to prevent login lookup failures.
+  docker exec -i "$ALLOYDB_CONTAINER" psql -U postgres -d eventhub -v ON_ERROR_STOP=1 <<'SQL'
+DELETE FROM security."user" u
+USING security."user" newer
+WHERE u.email = newer.email
+  AND u.id < newer.id;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'uq_user_email'
+      AND conrelid = 'security."user"'::regclass
+  ) THEN
+    ALTER TABLE security."user" ADD CONSTRAINT uq_user_email UNIQUE (email);
+  END IF;
+END $$;
+SQL
 }
 
 echo "[1/5] Starting Docker dependencies (DB + Pub/Sub emulator)..."
@@ -178,18 +215,18 @@ echo "$next_step_label Building shared model library..."
 )
 
 echo "$start_step_label Starting Spring Boot services in background..."
-start_service "backend" "$BACKEND_DIR" "chmod +x mvnw && ./mvnw spring-boot:run"
-start_service "schema" "$SCHEMA_DIR" "chmod +x mvnw && ./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=8082"
-start_service "publisher" "$PUBLISHER_DIR" "mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=8083,--spring.profiles.active=local"
-start_service "site" "$SITE_DIR" "mvn spring-boot:run -Dspring-boot.run.arguments=--spring.profiles.active=local"
+start_service "backend" "$BACKEND_DIR" "chmod +x mvnw && ./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=${BACKEND_PORT}"
+start_service "schema" "$SCHEMA_DIR" "chmod +x mvnw && ./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=${SCHEMA_PORT}"
+start_service "publisher" "$PUBLISHER_DIR" "mvn spring-boot:run -Dspring-boot.run.arguments='--server.port=${PUBLISHER_PORT} --spring.profiles.active=local'"
+start_service "site" "$SITE_DIR" "DAO_API_ENDPOINT=${DAO_API_ENDPOINT} SCHEMA_API_ENDPOINT=${SCHEMA_API_ENDPOINT} PUBLISHER_API_ENDPOINT=${PUBLISHER_API_ENDPOINT} mvn spring-boot:run -Dspring-boot.run.arguments='--server.port=${SITE_PORT} --spring.profiles.active=local'"
 
 echo "$wait_step_label Waiting for service ports..."
 for i in {1..60}; do
   ok=1
-  nc -z localhost 8081 >/dev/null 2>&1 || ok=0
-  nc -z localhost 8082 >/dev/null 2>&1 || ok=0
-  nc -z localhost 8083 >/dev/null 2>&1 || ok=0
-  nc -z localhost 8080 >/dev/null 2>&1 || ok=0
+  nc -z localhost "$BACKEND_PORT" >/dev/null 2>&1 || ok=0
+  nc -z localhost "$SCHEMA_PORT" >/dev/null 2>&1 || ok=0
+  nc -z localhost "$PUBLISHER_PORT" >/dev/null 2>&1 || ok=0
+  nc -z localhost "$SITE_PORT" >/dev/null 2>&1 || ok=0
   if [[ "$ok" -eq 1 ]]; then
     break
   fi
@@ -199,7 +236,7 @@ done
 echo "$final_step_label Local environment status"
 echo "Services logs: $LOG_DIR"
 echo "PID file: $PID_FILE"
-echo "UI expected on port 8080"
+echo "UI expected on port $SITE_PORT"
 echo
 echo "Tail logs:"
 echo "  tail -f $LOG_DIR/site.log"

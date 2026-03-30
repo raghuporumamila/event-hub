@@ -1,0 +1,36 @@
+# Maven build output
+target/
+**/target/
+
+# Local runtime artifacts
+.local-run/
+
+# Local database volume data
+services/event-hub-db-server/alloydb-data/
+
+# Terraform local cache/state
+**/.terraform/
+*.tfstate
+*.tfstate.*
+
+# IDE/editor files
+.vscode/
+.idea/
+*.iml
+*.swp
+*.swo
+*~
+
+# OS/temp files
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.temp
+*.bak
+*.orig
+
+# Environment/local config
+.env
+.env.*
+

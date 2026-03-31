@@ -611,6 +611,12 @@ src/test/java/com/eventhub/site/
 └── AppTest.java
 ```
 
+### UI Smoke Tests (HTMX Flows)
+
+Use the checklist below before merging UI/controller changes related to dashboard content loading, CRUD modals, and tester actions:
+
+- `HTMX_SMOKE_TEST_CHECKLIST.md`
+
 ## Troubleshooting
 
 ### Common Issues

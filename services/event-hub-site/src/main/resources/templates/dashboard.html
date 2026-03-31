@@ -50,7 +50,7 @@
            <span class="navbar-text" th:text="${user.name}"></span>(<span class="navbar-text" th:text="${user.role.getName()}"></span>)
          </a>
          <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-         	 <a class="dropdown-item" href="javascript:showWorkspaces()">Change Workspace</a>
+    	 	 	 <a class="dropdown-item" href="#" hx-get="/site/v1/manageWorkspaces" hx-target="#contentArea" hx-swap="innerHTML">Change Workspace</a>
              <a class="dropdown-item" href="#">Profile</a>
              <a class="dropdown-item" href="#">Sign out</a>
          </div>
@@ -64,19 +64,19 @@
       <div class="sidebar-sticky">
         <ul class="nav flex-column">
           <li class="nav-item">
-            <a class="nav-link active" href="javascript:showEvents()">
+            <a id="eventsNavLink" class="nav-link active" href="#" hx-get="/site/v1/events" hx-target="#contentArea" hx-swap="innerHTML">
               <span data-feather="home"></span>
               Events <span class="sr-only">(current)</span>
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="javascript:showSources()">
+            <a class="nav-link" href="#" hx-get="/site/v1/sources" hx-target="#contentArea" hx-swap="innerHTML">
               <span data-feather="arrow-right"></span>
               Sources
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="javascript:showTargets()">
+            <a class="nav-link" href="#" hx-get="/site/v1/targets" hx-target="#contentArea" hx-swap="innerHTML">
               <span data-feather="target"></span>
               Targets
             </a>
@@ -97,14 +97,14 @@
           
           
           <li class="nav-item">
-            <a class="nav-link" href="javascript:showIntegrations()">
+            <a class="nav-link" href="#" hx-get="/site/v1/manageIntegrations" hx-target="#contentArea" hx-swap="innerHTML">
               <span data-feather="layers"></span>
               Integrations
             </a>
           </li>
           
           <li class="nav-item">
-            <a class="nav-link" href="javascript:showConsumers()">
+            <a class="nav-link" href="#" hx-get="/site/v1/consumers" hx-target="#contentArea" hx-swap="innerHTML">
               <span data-feather="users"></span>
               Consumers
             </a>
@@ -162,59 +162,18 @@
   </div>
 </div>
 <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
       <script>window.jQuery || document.write('<script src="/docs/4.3/assets/js/vendor/jquery-slim.min.js"><\/script>')</script><script src="https://getbootstrap.com/docs/4.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-xrRywqdh3PHs8keKZN+8zzc5TX0GRTLCcmivcbNJWm2rs5C8PRhcEn3czEjhAO9o" crossorigin="anonymous"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.9.0/feather.min.js"></script>
        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js"></script>
        <script src="/js/dashboard.js"></script>
-        <script type="text/javascript">
-		function showEvents() {
-			$('#contentArea').html("<font color='green'>Loading.......</font>");
-			$.get('/site/v1/events', function(data) {
-				  $('#contentArea').html(data);
-			});
-		}
-		function showSources() {
-			$('#contentArea').html("<font color='green'>Loading.......</font>");
-			$.get('/site/v1/sources', function(data) {
-				  $('#contentArea').html(data);
-			});
-		}
-		function showTargets() {
-			$('#contentArea').html("<font color='green'>Loading.......</font>");
-			$.get('/site/v1/targets', function(data) {
-				  $('#contentArea').html(data);
-			});
-		}
-		function showIntegrations() {
-			$('#contentArea').html("<font color='green'>Loading.......</font>");
-			$.get('/site/v1/manageIntegrations', function(data) {
-				  $('#contentArea').html(data);
-			});
-		}
-		function showConsumers() {
-			$('#contentArea').html("<font color='green'>Loading.......</font>");
-			$.get('/site/v1/consumers', function(data) {
-				  $('#contentArea').html(data);
-			});
-		}
-		
-		function showWorkspaces() {
-			$('#contentArea').html("<font color='green'>Loading.......</font>");
-			$.get('/site/v1/manageWorkspaces', function(data) {
-				  $('#contentArea').html(data);
-			});
-		}
-		</script>
+    <script src="/js/dashboard-htmx.js"></script>
 		<script th:inline="javascript">
 		/*<![CDATA[*/
 
 		    var flag = [[${user.defaultWorkspace.name}]];
 		    window.onload = function() {
-		        if(flag == null || flag == '') {
-		        	showWorkspaces(); 
-		        } else {
-		        	showEvents();
-		        }
+        	initializeDashboardContent(flag);
 		    };
 
 		/*]]>*/

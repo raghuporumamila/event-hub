@@ -130,30 +130,23 @@ public class SiteController {
 		}
 		return definitions(user);
 	}
-	/*
 	@GetMapping(value = "/editDefinition")
 	public ModelAndView editDefinition(@ModelAttribute("user") User user, @RequestParam(name="id") String id) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 		ModelAndView modelAndView = new ModelAndView();
 		modelAndView.setViewName("editDefinition");
+		String baseUrl = apiEndPointUri.getDaoApiEndpoint() + "/organizations/" + user.getOrganization().getId() +
+				"/workspaces/" + user.getDefaultWorkspace().getId();
 
-		EventDefinition definition = restTemplate.exchange(apiEndPointUri.getDaoApiEndpoint() + "eventDefinition?id=" +
-				id, HttpMethod.GET, null,
+		EventDefinition definition = restTemplate.exchange(baseUrl + "/eventDefinitions/" + id, HttpMethod.GET, null,
 				new ParameterizedTypeReference<EventDefinition>() {
 				}).getBody();
 
-		List<Source> sources = restTemplate.exchange(apiEndPointUri.getDaoApiEndpoint() + "/organization/sourceTypes?orgId=" + user.getOrganization().getId() +
-				"&workspace=" + user.getDefaultWorkspace(), HttpMethod.GET, null,
+		List<Source> sources = restTemplate.exchange(baseUrl + "/sources", HttpMethod.GET, null,
 				new ParameterizedTypeReference<List<Source>>() {
 				}).getBody();
 
-		for (Source source : sources) {
-			if (definition.getSource().getId().longValue() == source.getId().longValue()) {
-				definition.setSource(source);
-				break;
-			}
-		}
 		modelAndView.addObject("definition", definition);
 		modelAndView.addObject("sources", sources);
 
@@ -161,11 +154,10 @@ public class SiteController {
 	}
 	
 	@PostMapping(value = "/updateDefinition")
-	@ResponseStatus(HttpStatus.OK)
-	public void updateDefinition(@ModelAttribute("user") User user, @ModelAttribute EventDefinition eventDefinition) {
-		System.out.println(eventDefinition.getSchema());
-		EventDefinition definitionFromDB = restTemplate.exchange(apiEndPointUri.getDaoApiEndpoint() + "eventDefinition?id=" +
-				eventDefinition.getId(), HttpMethod.GET, null,
+	public ModelAndView updateDefinition(@ModelAttribute("user") User user, @ModelAttribute EventDefinition eventDefinition) {
+		String baseUrl = apiEndPointUri.getDaoApiEndpoint() + "/organizations/" + user.getOrganization().getId() +
+				"/workspaces/" + user.getDefaultWorkspace().getId();
+		EventDefinition definitionFromDB = restTemplate.exchange(baseUrl + "/eventDefinitions/" + eventDefinition.getId(), HttpMethod.GET, null,
 				new ParameterizedTypeReference<EventDefinition>() {
 				}).getBody();
 		eventDefinition.setEventName(definitionFromDB.getEventName());
@@ -175,24 +167,25 @@ public class SiteController {
 		eventDefinition.setWorkspace(user.getDefaultWorkspace());
 		
 		HttpEntity<EventDefinition> requestUpdate = new HttpEntity<>(eventDefinition, (HttpHeaders) null);
-		ResponseEntity<String> response = restTemplate.exchange( apiEndPointUri.getDaoApiEndpoint() + "/organization/eventDefinition", HttpMethod.POST, requestUpdate , String.class );
+		ResponseEntity<Void> response = restTemplate.exchange(baseUrl + "/eventDefinitions", HttpMethod.PUT, requestUpdate , Void.class );
 	
 		if (!response.getStatusCode().equals(HttpStatus.OK)) {
-			throw new RuntimeException(response.getBody());
+			throw new RuntimeException("Failed to update definition");
 		}
-
-		//return definitions(user);
+		return definitions(user);
 	}
 	
 	@PostMapping(value = "/deleteDefinition")
 	public ModelAndView deleteDefinition(Model model, @ModelAttribute("user") User user, @RequestParam(name="id") String id) {
-		ResponseEntity<String> response = restTemplate.exchange( apiEndPointUri.getDaoApiEndpoint() + "/organization/eventDefinition?id=" + id, HttpMethod.DELETE, null , String.class );
+		String url = apiEndPointUri.getDaoApiEndpoint() + "/organizations/" + user.getOrganization().getId() +
+				"/workspaces/" + user.getDefaultWorkspace().getId() + "/eventDefinitions/" + id;
+		ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.DELETE, null , Void.class );
 	
 		if (!response.getStatusCode().equals(HttpStatus.OK)) {
-			throw new RuntimeException(response.getBody());
+			throw new RuntimeException("Failed to delete definition");
 		}
 		return definitions(user);
-	}*/
+	}
 
 	@GetMapping(value = "/sources")
 	public String sources(Model model, @ModelAttribute("user") User user) {
@@ -249,6 +242,28 @@ public class SiteController {
 		return sources(model, user);
 	}
 
+	@PostMapping(value = "/updateSource")
+	public String updateSource(Model model, @ModelAttribute("user") User user,
+							   @RequestParam(name="id") Long id,
+							   @RequestParam(name="name") String name,
+							   @RequestParam(name="type") String type) {
+		Source source = new Source();
+		source.setId(id);
+		source.setName(name);
+		source.setType(SourceTypeEnum.valueOf(type));
+		source.setWorkspace(user.getDefaultWorkspace());
+		source.setOrganization(user.getOrganization());
+		HttpEntity<Source> requestUpdate = new HttpEntity<>(source, (HttpHeaders) null);
+		String url = apiEndPointUri.getDaoApiEndpoint() + "/organizations/" + user.getOrganization().getId() +
+				"/workspaces/" + user.getDefaultWorkspace().getId() + "/sources";
+		ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.POST, requestUpdate , Void.class );
+
+		if (!response.getStatusCode().equals(HttpStatus.OK)) {
+			throw new RuntimeException(response.getBody().toString());
+		}
+		return sources(model, user);
+	}
+
 	@PostMapping(value = "/deleteSource")
 	public String deleteSource(Model model, @ModelAttribute("user") User user,
 							   @RequestParam(name="id") Long id) {
@@ -281,8 +296,25 @@ public class SiteController {
 
 	@PostMapping(value = "/createTarget")
 	public String createTarget(Model model, @ModelAttribute("user") User user,
-							   @RequestBody Target target) {
+							   @ModelAttribute Target target) {
 		target.setWorkspace(user.getDefaultWorkspace());
+		target.setOrganization(user.getOrganization());
+		HttpEntity<Target> requestUpdate = new HttpEntity<>(target, (HttpHeaders) null);
+		String url = apiEndPointUri.getDaoApiEndpoint() + "/organizations/" + user.getOrganization().getId() +
+				"/workspaces/" + user.getDefaultWorkspace().getId() + "/targets";
+		ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.POST, requestUpdate , Void.class );
+
+		if (!response.getStatusCode().equals(HttpStatus.OK)) {
+			throw new RuntimeException(response.getBody().toString());
+		}
+		return targets(model, user);
+	}
+
+	@PostMapping(value = "/updateTarget")
+	public String updateTarget(Model model, @ModelAttribute("user") User user,
+							   @ModelAttribute Target target) {
+		target.setWorkspace(user.getDefaultWorkspace());
+		target.setOrganization(user.getOrganization());
 		HttpEntity<Target> requestUpdate = new HttpEntity<>(target, (HttpHeaders) null);
 		String url = apiEndPointUri.getDaoApiEndpoint() + "/organizations/" + user.getOrganization().getId() +
 				"/workspaces/" + user.getDefaultWorkspace().getId() + "/targets";
@@ -495,8 +527,8 @@ public class SiteController {
 	}
 
 	@PostMapping(value = "/validateEventData")
-	@ResponseStatus(HttpStatus.OK)
-	public void validateEventData(@ModelAttribute("user") User user,
+	@ResponseBody
+	public String validateEventData(@ModelAttribute("user") User user,
 								  @RequestParam(name="eventId") String eventId,
 								  @RequestParam(name="jsonData") String jsonData) {
 		HttpHeaders headers = new HttpHeaders();
@@ -523,14 +555,21 @@ public class SiteController {
 		ResponseEntity<String> response = restTemplate.postForEntity( apiEndPointUri.getSchemaApiEndpoint() + "/validate", request , String.class );
 
 		if (!response.getStatusCode().equals(HttpStatus.OK)) {
-			throw new RuntimeException(response.getBody());
+			return "<font color=\"red\">Not a valid event</font>";
 		}
+		return "<font color=\"green\">Valid event</font>";
 	}
 
 	@PostMapping(value = "/publishEvent")
-	@ResponseStatus(HttpStatus.OK)
-	public void publishEvent(@ModelAttribute("user") User user,
-							 @RequestBody Event event) {
+	@ResponseBody
+	public String publishEvent(@ModelAttribute("user") User user,
+							 @RequestParam(name="eventId") Long eventId,
+							 @RequestParam(name="jsonData") String jsonData) {
+		Event event = new Event();
+		EventDefinition eventDefinition = new EventDefinition();
+		eventDefinition.setId(eventId);
+		event.setEventDefinition(eventDefinition);
+		event.setPayload(jsonData);
 		event.setOrganization(new Organization(user.getOrganization().getId(), null, null,
 				null, null, null, null, null));
 		event.setWorkspace(new Workspace(user.getDefaultWorkspace().getId(), null, null));
@@ -541,8 +580,9 @@ public class SiteController {
 						"/publish", httpEntity , Void.class );
 
 		if (!response.getStatusCode().equals(HttpStatus.OK)) {
-			throw new RuntimeException(response.getBody().toString());
+			return "<font color=\"red\">Event has an issue in processing.</font>";
 		}
+		return "<font color=\"green\">Event is successfully processed</font>";
 	}
 
 	@GetMapping(value = "/eventHistory")

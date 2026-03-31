@@ -4,31 +4,6 @@
 <head>
 <th:block th:include="~{fragments/manageCRUD :: headerfiles}">
 </th:block>
-<script type="text/javascript">
-$(document).ready(function(){
-	// Activate tooltip
-	$('[data-toggle="tooltip"]').tooltip();
-	
-	// Select/Deselect checkboxes
-	var checkbox = $('table tbody input[type="checkbox"]');
-	$("#selectAll").click(function(){
-		if(this.checked){
-			checkbox.each(function(){
-				this.checked = true;                        
-			});
-		} else{
-			checkbox.each(function(){
-				this.checked = false;                        
-			});
-		} 
-	});
-	checkbox.click(function(){
-		if(!this.checked){
-			$("#selectAll").prop("checked", false);
-		}
-	});
-});
-</script>
 </head>
 <body>
         <div class="table-wrapper">
@@ -39,7 +14,6 @@ $(document).ready(function(){
 					</div>
 					<div class="col-sm-6">
 						<a href="#addModal" class="btn btn-success" data-toggle="modal"><i class="material-icons">&#xE147;</i> <span>Add New Source</span></a>
-						<a href="#deleteModal" class="btn btn-danger" data-toggle="modal"><i class="material-icons">&#xE15C;</i> <span>Delete</span></a>						
 					</div>
                 </div>
             </div>
@@ -62,16 +36,16 @@ $(document).ready(function(){
                     <tr th:each="orgSourceType : ${orgSourceTypes}">
 						<td>
 							<span class="custom-checkbox">
-								<input type="checkbox" id="checkbox1" name="options[]" th:value="${orgSourceType.id}">
-								<label for="checkbox1"></label>
+								<input type="checkbox" th:id="|checkbox-${orgSourceType.id}|" name="options[]" th:value="${orgSourceType.id}">
+								<label th:for="|checkbox-${orgSourceType.id}|"></label>
 							</span>
 						</td>
                        <!--  <td th:text="${source.id}"></td> -->
                         <td th:text="${orgSourceType.name}"></td>
 						<td th:text="${orgSourceType.type}"></td>
                         <td>
-                            <a th:href="'javascript:viewSourceTypeKey(\'' + ${orgSourceType.id} + '\');'" class="edit" ><i class="material-icons" data-toggle="tooltip" title="Settings">&#xE254;</i></a>
-                            <a href="#deleteModal" class="delete" data-toggle="modal"><i class="material-icons" data-toggle="tooltip" title="Delete">&#xE872;</i></a>
+							<a href="#editModal" class="edit source-edit-trigger" data-toggle="modal" th:attr="data-source-id=${orgSourceType.id},data-source-name=${orgSourceType.name},data-source-type=${orgSourceType.type}"><i class="material-icons" data-toggle="tooltip" title="Edit">&#xE254;</i></a>
+							<a href="#deleteModal" class="delete source-delete-trigger" data-toggle="modal" th:attr="data-source-id=${orgSourceType.id}"><i class="material-icons" data-toggle="tooltip" title="Delete">&#xE872;</i></a>
                         </td>
                     </tr>
                    
@@ -82,7 +56,7 @@ $(document).ready(function(){
 	<div id="addModal" class="modal fade">
 		<div class="modal-dialog">
 			<div class="modal-content">
-				<form id="addSourceForm">
+				<form id="addSourceForm" hx-post="/site/v1/createSource" hx-target="#contentArea" hx-swap="innerHTML">
 					<div class="modal-header">						
 						<h4 class="modal-title">Add Source</h4>
 						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -104,7 +78,7 @@ $(document).ready(function(){
 					</div>
 					<div class="modal-footer">
 						<input type="button" class="btn btn-default" data-dismiss="modal" value="Cancel">
-						<input type="button" class="btn btn-success" value="Add" onclick="javascript:addSource()">
+						<input type="submit" class="btn btn-success" value="Add">
 					</div>
 				</form>
 			</div>
@@ -114,30 +88,29 @@ $(document).ready(function(){
 	<div id="editModal" class="modal fade">
 		<div class="modal-dialog">
 			<div class="modal-content">
-				<form id="updateSourceForm">
+				<form id="updateSourceForm" hx-post="/site/v1/updateSource" hx-target="#contentArea" hx-swap="innerHTML">
 					<div class="modal-header">						
-						<h4 class="modal-title">Settings</h4>
+						<h4 class="modal-title">Edit Source</h4>
 						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 					</div>
 					<div class="modal-body">					
+						<input type="hidden" id="editSourceId" name="id">
 						<div class="form-group">
-							<label>Source Key</label>
-							<small id="sourceTypeKey" class="text-muted"></small>
+							<label>Name</label>
+							<input type="text" class="form-control" id="editSourceName" name="name" required>
 						</div>
-						<!-- <div class="form-group">
+						<div class="form-group">
 							<label>Type</label>
-							<select id="eventTesterDefinitionId" class="form-control">
+							<select id="editSourceType" name="type" class="form-control" required>
 								<option>Select....</option>
-      							<option th:each="sourceType : ${sourceTypes}" th:value="${sourceType.id}" th:text="${sourceType.type}"></option>
-    						</select>
-						</div>	 -->		
+								<option th:each="sourceType : ${T(com.eventhub.model.SourceTypeEnum).values()}" th:value="${sourceType.name()}" th:text="${sourceType.name()}"></option>
+							</select>
+						</div>
 					</div>
-					<!-- 
 					<div class="modal-footer">
 						<input type="button" class="btn btn-default" data-dismiss="modal" value="Cancel">
 						<input type="submit" class="btn btn-info" value="Save">
 					</div>
-					 -->
 				</form>
 			</div>
 		</div>
@@ -146,59 +119,24 @@ $(document).ready(function(){
 	<div id="deleteModal" class="modal fade">
 		<div class="modal-dialog">
 			<div class="modal-content">
-				<form>
+				<form id="deleteSourceForm" hx-post="/site/v1/deleteSource" hx-target="#contentArea" hx-swap="innerHTML">
 					<div class="modal-header">						
 						<h4 class="modal-title">Delete Source</h4>
 						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 					</div>
 					<div class="modal-body">					
+						<input type="hidden" id="deleteSourceId" name="id">
 						<p>Are you sure you want to delete these Records?</p>
 						<p class="text-warning"><small>This action cannot be undone.</small></p>
 					</div>
 					<div class="modal-footer">
 						<input type="button" class="btn btn-default" data-dismiss="modal" value="Cancel">
-						<input type="button" class="btn btn-danger" value="Delete" onclick="deleteSource()">
+						<input type="submit" class="btn btn-danger" value="Delete">
 					</div>
 				</form>
 			</div>
 		</div>
 	</div>
-	
-	<script>
-		function addSource() {
-			$.post("/site/v1/createSource", $( "#addSourceForm" ).serialize(),
-		    function(data,status){
-		      if (status == 'success') {
-		    	  $('#addModal').modal('hide')
-		    	  $('.modal-backdrop').remove();
-		    	  $("#contentArea").html(data)
-		    	  
-		      }
-		    }).fail(function(response) {
-		    	$("#contentArea").html('<font color="green">Error please try again after some time' + '</font>')
-		    });
-		}
-		
-		function deleteSource(id) {
-			//alert($('#checkbox1:checked').val())
-			$.post("/site/v1/deleteSource?id=" + $('#checkbox1:checked').val(),
-		    function(data,status){
-		      if (status == 'success') {
-		    	  $('#deleteModal').modal('hide')
-		    	  $('.modal-backdrop').remove();
-		    	  $("#contentArea").html(data)
-		    	  
-		      }
-		    }).fail(function(response) {
-		    	$("#contentArea").html('<font color="green">Error please try again after some time' + '</font>')
-		    });
-		}
-		
-		function viewSourceTypeKey(key) {
-			$('#sourceTypeKey').text(key)
-			$('#editModal').modal()
-			
-		}
-	</script>
+	<script th:src="@{/js/manage-sources-page.js}"></script>
 </body>
 </html>                                		                            

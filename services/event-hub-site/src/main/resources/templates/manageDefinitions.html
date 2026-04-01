@@ -42,8 +42,8 @@
                         <td th:text="${definition.eventName}"></td>
 						<td th:text="${definition.source.name}"></td>
                         <td>
-							<a href="#editModal" class="edit" data-toggle="modal" th:attr="hx-get=|/site/v1/editDefinition?id=${definition.id}|" hx-target="#editModal" hx-swap="innerHTML"><i class="material-icons" data-toggle="tooltip" title="Edit">&#xE254;</i></a>
-							<a href="#deleteModal" class="delete definition-delete-trigger" data-toggle="modal" th:attr="data-definition-id=${definition.id}"><i class="material-icons" data-toggle="tooltip" title="Delete">&#xE872;</i></a>
+							<a href="#editModal" class="edit" data-toggle="modal" th:attr="hx-get=|/site/v1/editDefinition?id=${definition.id}|" hx-target="#editModal" hx-swap="innerHTML"><i class="material-icons" data-toggle="tooltip" title="Edit">edit</i></a>
+							<a href="#deleteModal" class="delete definition-delete-trigger" data-toggle="modal" th:attr="data-definition-id=${definition.id}"><i class="material-icons" data-toggle="tooltip" title="Delete">delete</i></a>
                         </td>
                     </tr>
                    

@@ -4,6 +4,37 @@
 <head>
 <th:block th:include="~{fragments/manageCRUD :: headerfiles}">
 </th:block>
+<style>
+	.add-source-btn {
+		display: inline-flex !important;
+		align-items: center !important;
+		line-height: 1 !important;
+	}
+
+	.add-source-btn-content {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.add-source-btn .add-source-plus {
+		display: inline-flex !important;
+		align-items: center !important;
+		justify-content: center !important;
+		font-size: 20px !important;
+		font-weight: 700;
+		width: 18px;
+		height: 18px;
+		line-height: 18px !important;
+		margin-right: 6px !important;
+	}
+
+	.add-source-btn span {
+		display: inline-flex !important;
+		align-items: center !important;
+		line-height: 18px !important;
+	}
+</style>
 </head>
 <body>
         <div class="table-wrapper">
@@ -13,7 +44,7 @@
 						<h2>Manage <b>sources</b></h2>
 					</div>
 					<div class="col-sm-6">
-						<a href="#addModal" class="btn btn-success" data-toggle="modal"><i class="material-icons">&#xE147;</i> <span>Add New Source</span></a>
+						<a href="#addModal" class="btn btn-success add-source-btn" data-toggle="modal"><span class="add-source-btn-content"><span class="add-source-plus" aria-hidden="true">+</span>&nbsp;<span>Add New Source</span></span></a>
 					</div>
                 </div>
             </div>

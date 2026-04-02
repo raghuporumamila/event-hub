@@ -26,13 +26,12 @@
     window.__manageDefinitionsAfterSwapHandler = function (event) {
       if (event.detail.target && event.detail.target.id === 'editModal') {
         var schema = document.getElementById('schema');
-        if (!schema) {
-          return;
-        }
-        try {
-          schema.value = JSON.stringify(JSON.parse(schema.value), undefined, 4);
-        } catch (e) {
-          // Keep existing value if schema isn't valid JSON.
+        if (schema) {
+          try {
+            schema.value = JSON.stringify(JSON.parse(schema.value), undefined, 4);
+          } catch (e) {
+            // Keep existing value if schema isn't valid JSON.
+          }
         }
       }
     };

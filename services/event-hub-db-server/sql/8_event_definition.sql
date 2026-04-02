@@ -88,3 +88,158 @@ VALUES(1, 'SoilSensorEvent', '{
     }
   }
 }', 1, 1, 1, NULL);
+
+INSERT INTO "event".event_definition
+(id, "eventName", payload_schema, organization_id, source_id, workspace_id, "payloadSchema")
+VALUES(2, 'AirQualityEvent', '{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AirQualityPayload",
+  "type": "object",
+  "required": ["metadata", "readings", "device_health"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["sensor_id", "timestamp", "location"],
+      "properties": {
+        "sensor_id": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "location": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number", "minimum": -90, "maximum": 90 },
+            "lon": { "type": "number", "minimum": -180, "maximum": 180 },
+            "altitude_m": { "type": "number" }
+          }
+        }
+      }
+    },
+    "readings": {
+      "type": "object",
+      "required": ["pm2_5", "co2", "temperature", "humidity"],
+      "properties": {
+        "pm2_5": {
+          "type": "object",
+          "properties": {
+            "value": { "type": "number", "minimum": 0 },
+            "unit": { "type": "string", "const": "µg/m³" }
+          }
+        },
+        "pm10": {
+          "type": "object",
+          "properties": {
+            "value": { "type": "number", "minimum": 0 },
+            "unit": { "type": "string", "const": "µg/m³" }
+          }
+        },
+        "co2": {
+          "type": "object",
+          "properties": {
+            "value": { "type": "number", "minimum": 0 },
+            "unit": { "type": "string", "const": "ppm" }
+          }
+        },
+        "temperature": {
+          "type": "object",
+          "properties": {
+            "value": { "type": "number" },
+            "unit": { "type": "string", "enum": ["°C", "°F"] }
+          }
+        },
+        "humidity": {
+          "type": "object",
+          "properties": {
+            "value": { "type": "number", "minimum": 0, "maximum": 100 },
+            "unit": { "type": "string", "const": "%" }
+          }
+        },
+        "aqi": { "type": "integer", "minimum": 0, "maximum": 500 }
+      }
+    },
+    "device_health": {
+      "type": "object",
+      "properties": {
+        "battery_level": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "signal_strength": { "type": "integer" }
+      }
+    }
+  }
+}', 1, 1, 1, NULL);
+
+INSERT INTO "event".event_definition
+(id, "eventName", payload_schema, organization_id, source_id, workspace_id, "payloadSchema")
+VALUES(3, 'WeatherStationEvent', '{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "WeatherStationPayload",
+  "type": "object",
+  "required": ["metadata", "readings", "device_health"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["station_id", "timestamp", "location"],
+      "properties": {
+        "station_id": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "location": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number", "minimum": -90, "maximum": 90 },
+            "lon": { "type": "number", "minimum": -180, "maximum": 180 },
+            "elevation_m": { "type": "number" }
+          }
+        }
+      }
+    },
+    "readings": {
+      "type": "object",
+      "required": ["temperature", "pressure", "wind"],
+      "properties": {
+        "temperature": {
+          "type": "object",
+          "properties": {
+            "value": { "type": "number" },
+            "unit": { "type": "string", "enum": ["°C", "°F"] }
+          }
+        },
+        "feels_like": {
+          "type": "object",
+          "properties": {
+            "value": { "type": "number" },
+            "unit": { "type": "string", "enum": ["°C", "°F"] }
+          }
+        },
+        "humidity": {
+          "type": "object",
+          "properties": {
+            "value": { "type": "number", "minimum": 0, "maximum": 100 },
+            "unit": { "type": "string", "const": "%" }
+          }
+        },
+        "pressure": {
+          "type": "object",
+          "properties": {
+            "value": { "type": "number", "minimum": 800, "maximum": 1100 },
+            "unit": { "type": "string", "const": "hPa" }
+          }
+        },
+        "wind": {
+          "type": "object",
+          "properties": {
+            "speed": { "type": "number", "minimum": 0 },
+            "gust": { "type": "number", "minimum": 0 },
+            "direction_deg": { "type": "integer", "minimum": 0, "maximum": 360 },
+            "unit": { "type": "string", "const": "km/h" }
+          }
+        },
+        "rainfall_mm": { "type": "number", "minimum": 0 },
+        "uv_index": { "type": "number", "minimum": 0 }
+      }
+    },
+    "device_health": {
+      "type": "object",
+      "properties": {
+        "battery_level": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "signal_strength": { "type": "integer" }
+      }
+    }
+  }
+}', 1, 1, 1, NULL);

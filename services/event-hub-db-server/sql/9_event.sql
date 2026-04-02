@@ -68,3 +68,177 @@ VALUES(6, NULL, '{
     "solar_charging": true
   }
 }', '2026-01-19 10:41:50.206136-05', 1, 1, 1, 1);
+
+INSERT INTO "event"."event"
+(id, "name", payload, "timestamp", event_definition_id, organization_id, source_id, workspace_id)
+VALUES(7, NULL, '{
+  "metadata": {
+    "sensor_id": "AQS-URBAN-1101",
+    "timestamp": "2026-02-10T08:00:00Z",
+    "location": {
+      "lat": 40.7128,
+      "lon": -74.0060,
+      "altitude_m": 12
+    }
+  },
+  "readings": {
+    "pm2_5": { "value": 18.4, "unit": "µg/m³" },
+    "pm10": { "value": 32.1, "unit": "µg/m³" },
+    "co2": { "value": 412, "unit": "ppm" },
+    "temperature": { "value": 21.3, "unit": "°C" },
+    "humidity": { "value": 55, "unit": "%" },
+    "aqi": 62
+  },
+  "device_health": {
+    "battery_level": 91,
+    "signal_strength": -78
+  }
+}', '2026-02-10 08:00:00.000000-05', 2, 1, 1, 1);
+
+INSERT INTO "event"."event"
+(id, "name", payload, "timestamp", event_definition_id, organization_id, source_id, workspace_id)
+VALUES(8, NULL, '{
+  "metadata": {
+    "sensor_id": "AQS-URBAN-1101",
+    "timestamp": "2026-02-10T14:00:00Z",
+    "location": {
+      "lat": 40.7128,
+      "lon": -74.0060,
+      "altitude_m": 12
+    }
+  },
+  "readings": {
+    "pm2_5": { "value": 34.7, "unit": "µg/m³" },
+    "pm10": { "value": 58.3, "unit": "µg/m³" },
+    "co2": { "value": 438, "unit": "ppm" },
+    "temperature": { "value": 24.8, "unit": "°C" },
+    "humidity": { "value": 48, "unit": "%" },
+    "aqi": 101
+  },
+  "device_health": {
+    "battery_level": 88,
+    "signal_strength": -81
+  }
+}', '2026-02-10 14:00:00.000000-05', 2, 1, 1, 1);
+
+INSERT INTO "event"."event"
+(id, "name", payload, "timestamp", event_definition_id, organization_id, source_id, workspace_id)
+VALUES(9, NULL, '{
+  "metadata": {
+    "sensor_id": "AQS-SUBURB-2204",
+    "timestamp": "2026-03-05T09:30:00Z",
+    "location": {
+      "lat": 41.8827,
+      "lon": -87.6233,
+      "altitude_m": 180
+    }
+  },
+  "readings": {
+    "pm2_5": { "value": 9.2, "unit": "µg/m³" },
+    "pm10": { "value": 14.5, "unit": "µg/m³" },
+    "co2": { "value": 398, "unit": "ppm" },
+    "temperature": { "value": 15.1, "unit": "°C" },
+    "humidity": { "value": 67, "unit": "%" },
+    "aqi": 38
+  },
+  "device_health": {
+    "battery_level": 76,
+    "signal_strength": -69
+  }
+}', '2026-03-05 09:30:00.000000-05', 2, 1, 1, 1);
+
+INSERT INTO "event"."event"
+(id, "name", payload, "timestamp", event_definition_id, organization_id, source_id, workspace_id)
+VALUES(10, NULL, '{
+  "metadata": {
+    "station_id": "WX-COAST-0087",
+    "timestamp": "2026-01-25T06:00:00Z",
+    "location": {
+      "lat": 34.0195,
+      "lon": -118.4912,
+      "elevation_m": 30
+    }
+  },
+  "readings": {
+    "temperature": { "value": 14.2, "unit": "°C" },
+    "feels_like": { "value": 12.8, "unit": "°C" },
+    "humidity": { "value": 82, "unit": "%" },
+    "pressure": { "value": 1013.4, "unit": "hPa" },
+    "wind": {
+      "speed": 18.5,
+      "gust": 27.0,
+      "direction_deg": 245,
+      "unit": "km/h"
+    },
+    "rainfall_mm": 0.0,
+    "uv_index": 1.2
+  },
+  "device_health": {
+    "battery_level": 100,
+    "signal_strength": -55
+  }
+}', '2026-01-25 06:00:00.000000-05', 3, 1, 1, 1);
+
+INSERT INTO "event"."event"
+(id, "name", payload, "timestamp", event_definition_id, organization_id, source_id, workspace_id)
+VALUES(11, NULL, '{
+  "metadata": {
+    "station_id": "WX-PLAINS-0312",
+    "timestamp": "2026-02-18T12:00:00Z",
+    "location": {
+      "lat": 39.7392,
+      "lon": -104.9903,
+      "elevation_m": 1609
+    }
+  },
+  "readings": {
+    "temperature": { "value": -3.5, "unit": "°C" },
+    "feels_like": { "value": -9.1, "unit": "°C" },
+    "humidity": { "value": 39, "unit": "%" },
+    "pressure": { "value": 843.6, "unit": "hPa" },
+    "wind": {
+      "speed": 34.0,
+      "gust": 52.0,
+      "direction_deg": 310,
+      "unit": "km/h"
+    },
+    "rainfall_mm": 0.0,
+    "uv_index": 3.4
+  },
+  "device_health": {
+    "battery_level": 63,
+    "signal_strength": -88
+  }
+}', '2026-02-18 12:00:00.000000-05', 3, 1, 1, 1);
+
+INSERT INTO "event"."event"
+(id, "name", payload, "timestamp", event_definition_id, organization_id, source_id, workspace_id)
+VALUES(12, NULL, '{
+  "metadata": {
+    "station_id": "WX-COAST-0087",
+    "timestamp": "2026-03-12T18:00:00Z",
+    "location": {
+      "lat": 34.0195,
+      "lon": -118.4912,
+      "elevation_m": 30
+    }
+  },
+  "readings": {
+    "temperature": { "value": 22.6, "unit": "°C" },
+    "feels_like": { "value": 23.1, "unit": "°C" },
+    "humidity": { "value": 61, "unit": "%" },
+    "pressure": { "value": 1008.9, "unit": "hPa" },
+    "wind": {
+      "speed": 11.0,
+      "gust": 16.5,
+      "direction_deg": 200,
+      "unit": "km/h"
+    },
+    "rainfall_mm": 2.8,
+    "uv_index": 0.0
+  },
+  "device_health": {
+    "battery_level": 95,
+    "signal_strength": -60
+  }
+}', '2026-03-12 18:00:00.000000-05', 3, 1, 1, 1);

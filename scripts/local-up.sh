@@ -139,7 +139,8 @@ seed_db() {
     echo "Resetting eventhub database..."
     docker exec -i "$ALLOYDB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
       -c "DROP DATABASE IF EXISTS eventhub;" \
-      -c "CREATE DATABASE eventhub;" \
+      -c "CREATE DATABASE eventhub;"
+    docker exec -i "$ALLOYDB_CONTAINER" psql -U postgres -d eventhub -v ON_ERROR_STOP=1 \
       -c "CREATE SCHEMA IF NOT EXISTS security;" \
       -c "CREATE SCHEMA IF NOT EXISTS event;"
   else
@@ -216,7 +217,7 @@ echo "$next_step_label Building shared model library..."
 
 echo "$start_step_label Starting Spring Boot services in background..."
 start_service "backend" "$BACKEND_DIR" "chmod +x mvnw && ./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=${BACKEND_PORT}"
-start_service "schema" "$SCHEMA_DIR" "chmod +x mvnw && ./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=${SCHEMA_PORT}"
+start_service "schema" "$SCHEMA_DIR" "mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=${SCHEMA_PORT}"
 start_service "publisher" "$PUBLISHER_DIR" "mvn spring-boot:run -Dspring-boot.run.arguments='--server.port=${PUBLISHER_PORT} --spring.profiles.active=local'"
 start_service "site" "$SITE_DIR" "DAO_API_ENDPOINT=${DAO_API_ENDPOINT} SCHEMA_API_ENDPOINT=${SCHEMA_API_ENDPOINT} PUBLISHER_API_ENDPOINT=${PUBLISHER_API_ENDPOINT} mvn spring-boot:run -Dspring-boot.run.arguments='--server.port=${SITE_PORT} --spring.profiles.active=local'"
 

@@ -13,7 +13,7 @@
     <div class="form-group">
 		<label for="eventTesterDefinitionId">Event</label>
 		<select id="eventTesterDefinitionId" name="eventId" class="form-control">
-      		<option th:each="definition : ${definitions}" th:value="${definition.id}" th:text="${definition.eventName}"></option>
+		<option th:each="definition : ${definitions}" th:value="${definition.id}" th:text="${definition.eventName}" th:attr="data-schema=${definition.payloadSchema}"></option>
     	</select>
     </div>
 	<div class="form-group">
@@ -25,3 +25,4 @@
 		<button type="button" class="btn btn-primary" hx-post="/site/v1/publishEvent" hx-include="#eventTesterForm" hx-target="#eventTesterStatus" hx-swap="innerHTML">Publish</button>
 	</div>
 </form>
+<script th:src="@{/js/event-tester-page.js}"></script>

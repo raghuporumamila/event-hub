@@ -7,6 +7,9 @@ spring:
     driver-class-name: org.postgresql.Driver
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:password}
+    hikari:
+      initialization-fail-timeout: -1  # retry indefinitely on startup instead of failing fast
+      connection-timeout: 300000       # wait up to 5 min for a connection (survive AlloyDB self-restart)
 
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect

@@ -125,15 +125,30 @@ start_service() {
   )
 }
 
-seed_db() {
-  echo "Seeding database schema and sample data..."
-
-  for i in {1..30}; do
-    if docker exec "$ALLOYDB_CONTAINER" pg_isready -U postgres >/dev/null 2>&1; then
-      break
+wait_for_db() {
+  echo "Waiting for AlloyDB to be ready..."
+  local db="${1:-eventhub}"
+  local consecutive=0
+  for i in {1..90}; do
+    if docker exec "$ALLOYDB_CONTAINER" psql -U postgres -d "$db" -c "SELECT 1" >/dev/null 2>&1; then
+      consecutive=$((consecutive + 1))
+      if [[ $consecutive -ge 5 ]]; then
+        echo "AlloyDB is stable and ready."
+        return 0
+      fi
+    else
+      consecutive=0
     fi
     sleep 2
   done
+  echo "ERROR: AlloyDB did not become ready in time." >&2
+  exit 1
+}
+
+seed_db() {
+  echo "Seeding database schema and sample data..."
+
+  wait_for_db postgres
 
   if [[ "$RESEED_DB" -eq 1 ]]; then
     echo "Resetting eventhub database..."
@@ -197,11 +212,13 @@ if [[ "$SEED_DB" -eq 1 ]]; then
     echo "[2/6] Running optional DB seed..."
   fi
   seed_db
+  wait_for_db eventhub
   next_step_label="[3/6]"
   start_step_label="[4/6]"
   wait_step_label="[5/6]"
   final_step_label="[6/6]"
 else
+  wait_for_db eventhub
   next_step_label="[2/5]"
   start_step_label="[3/5]"
   wait_step_label="[4/5]"
@@ -216,10 +233,10 @@ echo "$next_step_label Building shared model library..."
 )
 
 echo "$start_step_label Starting Spring Boot services in background..."
-start_service "backend" "$BACKEND_DIR" "chmod +x mvnw && ./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=${BACKEND_PORT}"
-start_service "schema" "$SCHEMA_DIR" "mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=${SCHEMA_PORT}"
-start_service "publisher" "$PUBLISHER_DIR" "mvn spring-boot:run -Dspring-boot.run.arguments='--server.port=${PUBLISHER_PORT} --spring.profiles.active=local'"
-start_service "site" "$SITE_DIR" "DAO_API_ENDPOINT=${DAO_API_ENDPOINT} SCHEMA_API_ENDPOINT=${SCHEMA_API_ENDPOINT} PUBLISHER_API_ENDPOINT=${PUBLISHER_API_ENDPOINT} mvn spring-boot:run -Dspring-boot.run.arguments='--server.port=${SITE_PORT} --spring.profiles.active=local'"
+start_service "backend" "$BACKEND_DIR" "chmod +x mvnw && MAVEN_OPTS='-Xmx512m' ./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=${BACKEND_PORT}"
+start_service "schema" "$SCHEMA_DIR" "MAVEN_OPTS='-Xmx512m' mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=${SCHEMA_PORT}"
+start_service "publisher" "$PUBLISHER_DIR" "MAVEN_OPTS='-Xmx512m' mvn spring-boot:run -Dspring-boot.run.arguments='--server.port=${PUBLISHER_PORT} --spring.profiles.active=local'"
+start_service "site" "$SITE_DIR" "DAO_API_ENDPOINT=${DAO_API_ENDPOINT} SCHEMA_API_ENDPOINT=${SCHEMA_API_ENDPOINT} PUBLISHER_API_ENDPOINT=${PUBLISHER_API_ENDPOINT} MAVEN_OPTS='-Xmx512m' mvn spring-boot:run -Dspring-boot.run.arguments='--server.port=${SITE_PORT} --spring.profiles.active=local'"
 
 echo "$wait_step_label Waiting for service ports..."
 for i in {1..60}; do

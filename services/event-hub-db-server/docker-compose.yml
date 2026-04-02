@@ -5,10 +5,18 @@ services:
     restart: always
     environment:
       - POSTGRES_PASSWORD=password
+      # Disable columnar engine to avoid self-restart loop in no-swap environments (Codespaces)
+      - ALLOYDB_DISABLE_COLUMNAR_ENGINE=true
+    # Pre-set conservative memory parameters so g_buffer_control doesn't trigger a self-restart
+    command: >
+      postgres
+      -c shared_buffers=128MB
+      -c work_mem=4MB
+      -c maintenance_work_mem=64MB
     ports:
       - "5432:5432"
-    # AlloyDB requires high shared memory for its columnar engine
-    shm_size: '2gb'
+    # Reduced shm to 512mb for memory-constrained environments (Codespaces)
+    shm_size: '512mb'
     ulimits:
       memlock:
         soft: -1
